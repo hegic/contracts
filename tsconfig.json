@@ -1,12 +1,15 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "strict": true,
-        "esModuleInterop": true,
-        "outDir": "dist",
-        "resolveJsonModule": true
-    },
-    "include": ["./scripts", "./test", "./deploy", "./typechain"],
-    "files": ["./hardhat.config.ts"]
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["packages/**/scripts/*.ts", "packages/**/test/**/*.ts","packages/**/deploy/**/*.ts", "packages/**/typechain", "packages/*/hardhat.config.ts"],
+  "files": [
+    "packages/v8888/hardhat.config.ts",
+    "node_modules/hardhat-local-networks-config-plugin/src/type-extensions.d.ts"
+  ]
 }

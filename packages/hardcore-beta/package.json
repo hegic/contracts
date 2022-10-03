@@ -1,0 +1,21 @@
+{
+  "name": "@hegic/hardcore-beta",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hardhat.config.ts",
+  "author": "0mllwntrmt3",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "npx hardhat clean && npx hardhat compile",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@chainlink/contracts": "^0.4.2",
+    "@hegic/utils": "1.0.0",
+    "@hegic/v8888": "1.0.0",
+    "@types/prompts": "^2.0.14",
+    "hardhat-dependency-compiler": "^1.1.3",
+    "prompt-async": "^0.9.9",
+    "prompts": "^2.4.2"
+  }
+}

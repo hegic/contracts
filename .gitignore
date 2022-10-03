@@ -1,15 +1,9 @@
-node_modules
-.env
-
-coverage
-coverage.json
-
-#Hardhat files
-cache
-artifacts
-
-typechain
-yarn-error.log
-/abi
-/build
-/deployments
+**/node_modules
+**/.*
+packages/*/typechain
+packages/*/cache
+packages/*/typechain
+packages/*/artifacts
+packages/*/deployments
+packages/*/abi
+.DS_Store

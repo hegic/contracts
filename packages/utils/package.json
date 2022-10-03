@@ -1,0 +1,13 @@
+{
+  "name": "@hegic/utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hardhat.config.ts",
+  "author": "0mllwntrmt3",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "npx hardhat clean && npx hardhat compile",
+    "clean": "npx hardhat clean",
+    "test": "npx hardhat test"
+  }
+}
