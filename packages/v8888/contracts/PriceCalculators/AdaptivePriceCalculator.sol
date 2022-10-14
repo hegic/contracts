@@ -34,8 +34,6 @@ contract AdaptivePriceCalculator is IVLPriceCalculator {
     uint256 internal constant PRICE_MODIFIER_DECIMALS = 1e8;
     uint256 public utilizationRate = 0;
 
-    // uint256 public utilizationRate = 1e8;
-
     constructor(
         uint256 initialRate,
         uint256 priceCorrectorRate,

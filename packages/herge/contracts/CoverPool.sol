@@ -22,6 +22,7 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@hegic/utils/contracts/Math.sol";
 import "./ICoverPool.sol";
 import "./CoverPoolToken.sol";
 
@@ -31,6 +32,7 @@ contract CoverPool is
     ICoverPool
 {
     using SafeERC20 for IERC20;
+    using HegicMath for uint256;
     IERC20 public immutable override coverToken;
     IERC20 public immutable override profitToken;
 
@@ -46,16 +48,16 @@ contract CoverPool is
     uint256 public cumulativeProfit;
     uint256 public profitTokenBalance;
     uint256 public totalShare;
+    uint256 public unwithdrawnCoverTokens;
     address public payoffPool;
 
     mapping(uint256 => uint256) public shareOf;
-    mapping(uint256 => uint256) public buferredUnclamedProfit;
+    mapping(uint256 => uint256) public bufferredUnclaimedProfit;
     mapping(uint256 => uint256) public cumulativePoint;
     mapping(uint256 => Epoch) public override epoch;
 
     uint256 public nextEpochChangingPrice;
     uint256 public override currentEpoch;
-    uint256 firstEpoch;
 
     constructor(
         IERC20 _coverToken,
@@ -90,6 +92,10 @@ contract CoverPool is
         override
         returns (uint256)
     {
+        require(
+            _nextPositionId > 1 || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "Only admin can create first position"
+        );
         if (positionId == 0) {
             positionId = _nextPositionId++;
             _mint(msg.sender, positionId);
@@ -105,7 +111,13 @@ contract CoverPool is
         _bufferUnclaimedProfit(positionId);
         uint256 shareOfProvide = _provide(positionId, amount);
         coverToken.safeTransferFrom(msg.sender, address(this), amount);
-        // TODO emit Provided(positionId, amount, shareOfProvide, shareOf[positionId], totalShare);
+        emit Provided(
+            positionId,
+            amount,
+            shareOfProvide,
+            shareOf[positionId],
+            totalShare
+        );
         return positionId;
     }
 
@@ -115,26 +127,37 @@ contract CoverPool is
      * @param amount amount of the $HEGIC tokens to withdraw
      **/
     function withdraw(uint256 positionId, uint256 amount) external override {
+        require(
+            _isApprovedOrOwner(msg.sender, positionId),
+            "only owner of the position can withdraw it"
+        );
         _bufferUnclaimedProfit(positionId);
         uint256 shareOfWithdraw = _withdraw(positionId, amount);
-        // TODO emit Withdrawn(currentEpoch, positionId, amount, shareOfWithdraw, shareOf[positionId], totalShare);
+        emit Withdrawn(
+            currentEpoch,
+            positionId,
+            amount,
+            shareOfWithdraw,
+            shareOf[positionId],
+            totalShare
+        );
     }
 
     /**
      * @notice used to claim 100% of users profits in $USDC (if any).
      * @param amount amount of the $USDC profits
      **/
-    function claim(uint256 psoitionId)
+    function claim(uint256 positionId)
         external
         override
         returns (uint256 amount)
     {
-        amount = _bufferUnclaimedProfit(psoitionId);
+        amount = _bufferUnclaimedProfit(positionId);
         if (amount == 0) return 0;
-        buferredUnclamedProfit[psoitionId] = 0;
+        bufferredUnclaimedProfit[positionId] = 0;
         profitTokenBalance -= amount;
-        profitToken.safeTransfer(ownerOf(psoitionId), amount);
-        // TODO emit Claimed(positionId, amount);
+        profitToken.safeTransfer(ownerOf(positionId), amount);
+        emit Claimed(positionId, amount);
     }
 
     /**
@@ -145,11 +168,8 @@ contract CoverPool is
         external
     {
         uint256 profitAmount = _bufferUnclaimedProfit(positionId);
-        buferredUnclamedProfit[positionId] = 0;
+        bufferredUnclaimedProfit[positionId] = 0;
         uint256 tokenAmount;
-
-        // if(profitAmount > 0)
-        // TODO emit Claimed(positionId, profitAmount);
 
         for (uint256 idx = 0; idx < outFrom.length; idx++) {
             (uint256 profit, uint256 token) = _withdrawFromEpoch(
@@ -158,11 +178,24 @@ contract CoverPool is
             );
             profitAmount += profit;
             tokenAmount += token;
-            // TODO emit WithdrawnFromEpoch(positionId, outFrom[idx], profit);
+            emit WithdrawnFromEpoch(outFrom[idx], positionId, token, profit);
         }
+        profitTokenBalance -= profitAmount;
 
+        if (profitAmount > 0) emit Claimed(positionId, profitAmount);
         coverToken.safeTransfer(ownerOf(positionId), tokenAmount);
         profitToken.safeTransfer(ownerOf(positionId), profitAmount);
+    }
+
+    /**
+     * @notice allows users to close previous epoch and start next epoch
+     */
+    function fallbackEpochClose() external {
+        require(
+            block.timestamp > epoch[currentEpoch].start + 90 days,
+            "It's too early yet"
+        );
+        _startNextEpoch();
     }
 
     /**
@@ -177,7 +210,7 @@ contract CoverPool is
         returns (uint256 amount)
     {
         return
-            buferredUnclamedProfit[positionId] +
+            bufferredUnclaimedProfit[positionId] +
             ((cumulativeProfit - cumulativePoint[positionId]) *
                 shareOf[positionId]) /
             ADDITIONAL_DECIMALS;
@@ -202,7 +235,7 @@ contract CoverPool is
      * @return amount amount of $HEGIC tokens
      **/
     function coverTokenTotal() public view returns (uint256 amount) {
-        return coverToken.balanceOf(address(this));
+        return coverToken.balanceOf(address(this)) - unwithdrawnCoverTokens;
     }
 
     /**
@@ -235,17 +268,6 @@ contract CoverPool is
     }
 
     /**
-     * @notice allows users to close previous epoch and start next epoch
-     */
-    function fallbackEpochClose() external {
-        require(
-            block.timestamp > epoch[currentEpoch].start + 90 days,
-            "It's too early yet"
-        );
-        _startNextEpoch();
-    }
-
-    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId)
@@ -269,6 +291,18 @@ contract CoverPool is
      **/
     function setWindowSize(uint32 value) external onlyRole(DEFAULT_ADMIN_ROLE) {
         windowSize = value;
+        emit SetWindowSize(value);
+    }
+
+    /**
+     * TODO
+     **/
+    function setPayoffPool(address value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        payoffPool = value;
+        emit SetPayoffPool(value);
     }
 
     /**
@@ -279,6 +313,7 @@ contract CoverPool is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         nextEpochChangingPrice = value;
+        emit SetNextEpochChangingPrice(value);
     }
 
     /**
@@ -289,7 +324,6 @@ contract CoverPool is
             profitTokenBalance;
         profitTokenBalance += profitAmount;
         cumulativeProfit += (profitAmount * ADDITIONAL_DECIMALS) / totalShare;
-
         _startNextEpoch();
         emit Profit(currentEpoch, profitAmount);
     }
@@ -335,7 +369,7 @@ contract CoverPool is
         returns (uint256 shareOfWithdraw)
     {
         uint256 totalCoverBalance = coverTokenTotal();
-        shareOfWithdraw = (amount * totalShare) / totalCoverBalance;
+        shareOfWithdraw = (amount * totalShare).ceilDiv(totalCoverBalance);
         shareOf[positionId] -= shareOfWithdraw;
         epoch[currentEpoch].outShare[positionId] += shareOfWithdraw;
         epoch[currentEpoch].totalShareOut += shareOfWithdraw;
@@ -347,13 +381,13 @@ contract CoverPool is
     {
         if (totalShare == 0) return 0;
 
-        buferredUnclamedProfit[positionId] +=
+        bufferredUnclaimedProfit[positionId] +=
             ((cumulativeProfit - cumulativePoint[positionId]) *
                 shareOf[positionId]) /
             ADDITIONAL_DECIMALS;
         cumulativePoint[positionId] = cumulativeProfit;
 
-        return buferredUnclamedProfit[positionId];
+        return bufferredUnclaimedProfit[positionId];
     }
 
     function _startNextEpoch() internal {
@@ -362,15 +396,15 @@ contract CoverPool is
                 block.timestamp - epoch[currentEpoch].start,
             "The epoch is too short to be closed"
         );
+
         uint256 totalShareOut = epoch[currentEpoch].totalShareOut;
         uint256 coverTokenOut = totalShare == 0
             ? 0
             : (totalShareOut * coverTokenTotal()) / totalShare;
-        uint256 profitOut = totalShare == 0
-            ? 0
-            : ((cumulativeProfit - epoch[currentEpoch].cumulativePoint) *
-                coverTokenTotal()) / ADDITIONAL_DECIMALS;
-
+        uint256 profitOut = (totalShareOut *
+            (cumulativeProfit - epoch[currentEpoch].cumulativePoint)) /
+            ADDITIONAL_DECIMALS;
+        unwithdrawnCoverTokens += coverTokenOut;
         epoch[currentEpoch].coverTokenOut = coverTokenOut;
         epoch[currentEpoch].profitTokenOut = profitOut;
         totalShare -= epoch[currentEpoch].totalShareOut;
@@ -379,6 +413,7 @@ contract CoverPool is
         epoch[currentEpoch].cumulativePoint = cumulativeProfit;
         epoch[currentEpoch].start = block.timestamp;
         epoch[currentEpoch].changingPrice = nextEpochChangingPrice;
+        emit EpochStarted(currentEpoch, nextEpochChangingPrice);
     }
 
     function _withdrawFromEpoch(uint256 positionId, uint256 epochID)
@@ -393,5 +428,6 @@ contract CoverPool is
         profit = (e.outShare[positionId] * e.profitTokenOut) / e.totalShareOut;
         token = (e.outShare[positionId] * e.coverTokenOut) / e.totalShareOut;
         e.outShare[positionId] = 0;
+        unwithdrawnCoverTokens -= token;
     }
 }

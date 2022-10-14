@@ -24,11 +24,12 @@ import "../IOperationalTreasury.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./HegicStrategy.sol";
+import "./IHegicInverseStrategy.sol";
 
-abstract contract HegicInverseStrategy is HegicStrategy {
+abstract contract HegicInverseStrategy is HegicStrategy, IHegicInverseStrategy {
     using SafeERC20 for IERC20;
     bytes32 public constant EXERCISER_ROLE = keccak256("EXERCISER_ROLE");
-    mapping(uint256 => uint32) positionExpiration;
+    mapping(uint256 => uint32) public override positionExpiration;
 
     constructor(
         AggregatorV3Interface _priceProvider,
@@ -44,7 +45,12 @@ abstract contract HegicInverseStrategy is HegicStrategy {
         uint256 amount,
         uint256 period,
         bytes[] calldata /*additional*/
-    ) public view override returns (uint128 negativepnl, uint128 positivepnl) {
+    )
+        public
+        view
+        override(IHegicStrategy, HegicStrategy)
+        returns (uint128 negativepnl, uint128 positivepnl)
+    {
         negativepnl = _calculateStrategyPremium(amount, period);
         uint128 collateral = _calculateCollateral(amount, period);
         positivepnl = collateral - uint128(negativepnl);
@@ -53,7 +59,7 @@ abstract contract HegicInverseStrategy is HegicStrategy {
     function isPayoffAvailable(uint256 optionID, address caller)
         external
         view
-        override
+        override(IHegicStrategy, HegicStrategy)
         returns (bool)
     {
         return
@@ -86,14 +92,13 @@ abstract contract HegicInverseStrategy is HegicStrategy {
         positionExpiration[id] = uint32(block.timestamp + period);
         uint256 strike = _currentPrice();
         strategyData[id] = StrategyData(uint128(amount), uint128(strike));
-        emit Acquired(id, amount, strike, positionExpiration[id]);
         expiration = uint32(block.timestamp + 90 days);
     }
 
     function payOffAmount(uint256 optionID)
         external
         view
-        override
+        override(IHegicStrategy, HegicStrategy)
         returns (uint256 amount)
     {
         (, , uint128 negativepnl, uint128 positivepnl, ) = pool.lockedLiquidity(

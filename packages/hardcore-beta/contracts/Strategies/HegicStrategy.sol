@@ -19,13 +19,13 @@ pragma solidity ^0.8.3;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+import "@hegic/v8888/contracts/Interfaces/IPremiumCalculator.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../Interfaces/IHegicOperationalTreasury.sol";
 import "../Interfaces/IHegicStrategy.sol";
-import "../Interfaces/IPremiumCalculator.sol";
 
 abstract contract HegicStrategy is
     AccessControl,

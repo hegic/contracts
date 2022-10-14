@@ -36,7 +36,7 @@ contract OperationalTreasury is
 
     IERC20 public immutable override token;
     IOptionsManager public immutable override manager;
-    ICoverPool public override coverPool;
+    ICoverPool public immutable override coverPool;
     mapping(uint256 => LockedLiquidity) public override lockedLiquidity;
     mapping(IHegicStrategy => uint256) public override lockedByStrategy;
     mapping(IHegicStrategy => bool) public acceptedStrategy;
@@ -46,8 +46,7 @@ contract OperationalTreasury is
 
     uint256 public override lockedPremium;
     uint256 public override totalLocked;
-    uint256 public override totalBalance;
-    uint256 public maxLockupPeriod;
+    uint256 public immutable maxLockupPeriod;
 
     constructor(
         IERC20 _token,
@@ -84,7 +83,6 @@ contract OperationalTreasury is
         uint256 optionID = manager.createOptionFor(holder);
         (uint32 expiration, uint256 positivePNL, uint256 negativePNL) = strategy
             .create(optionID, holder, amount, period, additional);
-
         _lockLiquidity(
             strategy,
             optionID,
@@ -92,9 +90,6 @@ contract OperationalTreasury is
             uint128(positivePNL),
             expiration
         );
-        token.safeTransferFrom(msg.sender, address(this), positivePNL);
-
-        // TODO emit ...
     }
 
     /**
@@ -117,13 +112,14 @@ contract OperationalTreasury is
 
         require(
             totalLocked + lockedPremium <=
-                totalBalance + coverPool.availableForPayment(),
+                totalBalance() + coverPool.availableForPayment(),
             "The negative pnl amount is too large"
         );
         require(
             block.timestamp + maxLockupPeriod >= expiration,
             "The period is too long"
         );
+
         lockedByStrategy[strategy] += negativepnl;
         lockedLiquidity[optionID] = LockedLiquidity(
             LockedLiquidityState.Locked,
@@ -137,8 +133,7 @@ contract OperationalTreasury is
     }
 
     /**
-     * @notice  Used for unlocking
-     * liquidity after an expiration
+     * @notice Used for unlocking liquidity after an expiration
      * @param lockedLiquidityID The option contract ID
      **/
     function unlock(uint256 lockedLiquidityID) public virtual override {
@@ -148,7 +143,6 @@ contract OperationalTreasury is
             "The expiration time has not yet come"
         );
         _unlock(ll);
-        totalBalance += ll.positivepnl;
         emit Expired(lockedLiquidityID);
     }
 
@@ -176,24 +170,11 @@ contract OperationalTreasury is
         require(account != address(0), "b");
 
         _unlock(ll);
-        if (totalBalance < amount) {
+        if (totalBalance() < amount) {
             _replenish(amount);
         }
         _withdraw(account, amount);
         emit Paid(lockedLiquidityID, account, amount);
-    }
-
-    /**
-     * @notice Used for adding deposited tokens
-     * (e.g. premiums) to the contract's totalBalance
-     * @param amount The amount of tokens to add
-     **/
-    function addTokens()
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        returns (uint256 amount)
-    {
-        return _addTokens();
     }
 
     /**
@@ -254,6 +235,10 @@ contract OperationalTreasury is
         _connect(s);
     }
 
+    function totalBalance() public view override returns (uint256) {
+        return token.balanceOf(address(this));
+    }
+
     function _unlock(LockedLiquidity storage ll) internal {
         require(
             ll.state == LockedLiquidityState.Locked,
@@ -269,24 +254,17 @@ contract OperationalTreasury is
         uint256 transferAmount = benchmark +
             additionalAmount +
             lockedPremium -
-            totalBalance;
+            totalBalance();
         coverPool.payOut(transferAmount);
-        totalBalance += transferAmount;
         emit Replenished(transferAmount);
-    }
-
-    function _addTokens() private returns (uint256 amount) {
-        amount = token.balanceOf(address(this)) - totalBalance;
-        totalBalance += amount;
     }
 
     function _withdraw(address to, uint256 amount) internal {
         require(
             amount + totalLocked + lockedPremium <=
-                totalBalance + coverPool.availableForPayment(),
+                totalBalance() + coverPool.availableForPayment(),
             "The amount to withdraw is too large"
         );
-        totalBalance -= amount;
         if (amount > 0) token.safeTransfer(to, amount);
     }
 

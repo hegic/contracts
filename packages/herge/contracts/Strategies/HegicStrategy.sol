@@ -26,7 +26,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../IOperationalTreasury.sol";
 import "./IHegicStrategy.sol";
 
-import "@hegic/hardcore-beta/contracts/Interfaces/IPremiumCalculator.sol";
+import "@hegic/v8888/contracts/Interfaces/IPremiumCalculator.sol";
 
 abstract contract HegicStrategy is
     AccessControl,
@@ -59,36 +59,6 @@ abstract contract HegicStrategy is
         spotDecimals = 10**_spotDecimals;
     }
 
-    // /**
-    //  * @notice Used for buying options/strategies
-    //  * @param holder The holder address
-    //  * @param period The option/strategy period
-    //  * @param amount The option/strategy amount
-    //  * @param strike The option/strategy strike
-    //  **/
-    // function buy(
-    //     address holder,
-    //     uint32 period,
-    //     uint128 amount,
-    //     uint256 strike
-    // ) external virtual nonReentrant returns (uint256 id) {
-    //     if (strike == 0) strike = _currentPrice();
-    //     (uint128 negativepnlAmount, uint256 positivepnl) =
-    //         _calculateNegativepnlAndPositivepnl(period, amount, strike);
-    //     require(
-    //         pool.lockedByStrategy(address(this)) + negativepnlAmount <=
-    //             lockedLimit,
-    //         "HegicStrategy: The limit is exceeded"
-    //     );
-
-    //     pool.token().safeTransferFrom(msg.sender, address(pool), positivepnl);
-
-    //     uint32 expiration = uint32(block.timestamp + period);
-    //     id = pool.lockLiquidityFor(holder, negativepnlAmount, expiration);
-    //     strategyData[id] = StrategyData(uint128(amount), uint128(strike));
-    //     emit Acquired(id, amount, positivepnl, strike, expiration);
-    // }
-
     function create(
         uint256 id,
         address holder,
@@ -100,8 +70,8 @@ abstract contract HegicStrategy is
         override
         returns (
             uint32 expiration,
-            uint256 positivePNL,
-            uint256 negativePNL
+            uint256 negativePNL,
+            uint256 positivePNL
         )
     {
         require(
@@ -109,12 +79,27 @@ abstract contract HegicStrategy is
             "Only OperationalTresuary pool can execute this function"
         );
 
+        (expiration, negativePNL, positivePNL) = _create(
+            id,
+            holder,
+            amount,
+            period,
+            additional
+        );
+
         require(
-            pool.lockedByStrategy(this) <= lockedLimit,
+            pool.lockedByStrategy(this) + negativePNL <= lockedLimit,
             "HegicStrategy: The limit is exceeded"
         );
 
-        return _create(id, holder, amount, period, additional);
+        emit Acquired(
+            id,
+            strategyData[id],
+            negativePNL,
+            positivePNL,
+            period,
+            additional
+        );
     }
 
     function _create(
@@ -128,11 +113,11 @@ abstract contract HegicStrategy is
         virtual
         returns (
             uint32 expiration,
-            uint256 positivePNL,
-            uint256 negativePNL
+            uint256 negativePNL,
+            uint256 positivePNL
         )
     {
-        (positivePNL, negativePNL) = calculateNegativepnlAndPositivepnl(
+        (negativePNL, positivePNL) = calculateNegativepnlAndPositivepnl(
             amount,
             period,
             additional
@@ -140,39 +125,13 @@ abstract contract HegicStrategy is
         expiration = uint32(block.timestamp + period);
         uint256 strike = _currentPrice();
         strategyData[id] = StrategyData(uint128(amount), uint128(strike));
-        emit Acquired(id, amount, strike, expiration);
     }
-
-    // /**
-    //  * @notice Used for exercising an in-the-money
-    //  * option/strategy and taking profits
-    //  * @param optionID The option/strategy ID
-    //  **/
-    // function exercise(uint256 optionID) external {
-    //     _checkPayOff(optionID);
-    //     uint256 payOffAmount = _payOffAmount(optionID);
-    //     pool.payOff(optionID, payOffAmount, pool.manager().ownerOf(optionID));
-    // }
 
     function connect() external override {
         IOperationalTreasury _pool = IOperationalTreasury(msg.sender);
         require(address(pool) == address(0), "The strategy was inited");
         pool = _pool;
     }
-
-    // function calculatePremium(
-    //     uint32 period,
-    //     uint128 amount,
-    //     uint256 strike
-    // ) external view returns (uint256 premium, uint256 available) {
-    //     if (strike == 0) strike = _currentPrice();
-    //     (, premium) = _calculateNegativepnlAndPositivepnl(
-    //         period,
-    //         amount,
-    //         strike
-    //     );
-    //     available = _getAvailableContracts(period, strike);
-    // }
 
     /**
      * @notice Used for viewing the total liquidity

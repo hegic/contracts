@@ -17,6 +17,7 @@ export async function initializePools({
   payoffPool,
   signers: [deployer, alice, bob, carl],
   pricers,
+  PriceProviderETH,
 }: Fixture) {
   //Pricers
 
@@ -35,8 +36,11 @@ export async function initializePools({
   await CoverPool.grantRole(OPERATIONAL_TRESUARY_ROLE, deployer.address)
 
   await USDC.mint(alice.address, 100000e6)
+  await HEGIC.mint(deployer.address, parseUnits("1"))
+  await HEGIC.connect(deployer).approve(CoverPool.address, constants.MaxUint256)
+  await CoverPool.connect(deployer).provide(parseUnits("1"), 0)
   await CoverPool.connect(carl).provide(parseUnits("1000000000000"), 0)
-  await CoverPool.connect(bob).provide(parseUnits("50"), 0)
+  await CoverPool.connect(bob).provide(parseUnits("49"), 0)
 
   await CoverPool.grantRole(
     OPERATIONAL_TRESUARY_ROLE,
@@ -51,7 +55,6 @@ export async function initializePools({
 
   //Operational
   await USDC.mint(OperationalTreasury.address, 100000e6)
-  await OperationalTreasury.addTokens()
   await USDC.mint(alice.address, parseUnits("10000000000000"))
 
   let benchmark = 100000e6

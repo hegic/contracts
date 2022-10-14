@@ -20,13 +20,16 @@ pragma solidity ^0.8.3;
  **/
 
 interface IHegicStrategy {
+    event SetLimit(uint256 limit);
+
     event Acquired(
         uint256 indexed id,
-        uint256 amount,
-        uint256 strike,
-        uint32 expiration
+        StrategyData data,
+        uint256 negativepnl,
+        uint256 positivepnl,
+        uint256 period,
+        bytes[] additional
     );
-    event SetLimit(uint256 limit);
 
     struct StrategyData {
         uint128 amount;

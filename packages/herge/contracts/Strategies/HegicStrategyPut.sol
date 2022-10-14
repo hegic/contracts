@@ -45,7 +45,7 @@ contract HegicStrategyPut is HegicStrategy {
         StrategyData memory data = strategyData[optionID];
         return
             ProfitCalculator.calculatePutProfit(
-                data.strike,
+                (data.strike * PRICE_SCALE_NUMERATOR) / PRICE_SCALE_DENOMINATOR,
                 _currentPrice(),
                 data.amount,
                 TOKEN_DECIMALS,

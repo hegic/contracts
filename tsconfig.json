@@ -7,7 +7,7 @@
     "outDir": "dist",
     "resolveJsonModule": true
   },
-  "include": ["packages/**/scripts/*.ts", "packages/**/test/**/*.ts","packages/**/deploy/**/*.ts", "packages/**/typechain", "packages/*/hardhat.config.ts"],
+  "include": ["packages/**/scripts/*.ts", "packages/**/test/**/*.ts","packages/**/deploy/**/*.ts", "packages/**/typechain", "packages/*/hardhat.config.ts", "packages/herge/lib/helper.ts"],
   "files": [
     "packages/v8888/hardhat.config.ts",
     "node_modules/hardhat-local-networks-config-plugin/src/type-extensions.d.ts"

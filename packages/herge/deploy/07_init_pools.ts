@@ -29,7 +29,6 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
   await execute("OptionsManager", {from: deployer}, "grantRole", HEGIC_POOL_ROLE, OperationalTreasury.address)
 
   await execute("USDC", {from: deployer}, "mint", OperationalTreasury.address, parseUnits("100000", 6))
-  await execute("OperationalTreasury", {from: deployer}, "addTokens")
 
   await execute("USDC", {from: deployer}, "mint", payoffPool, parseUnits("1000000"))
   await execute("HEGIC", {from: payoffPool}, "approve", CoverPool.address, constants.MaxUint256)

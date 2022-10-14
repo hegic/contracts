@@ -20,7 +20,7 @@ pragma solidity ^0.8.3;
  **/
 
 import "./BasePriceCalculator.sol";
-import "../Interfaces/Interfaces.sol";
+import "../Interfaces/IPremiumCalculator.sol";
 import "@hegic/utils/contracts/Math.sol";
 
 /**

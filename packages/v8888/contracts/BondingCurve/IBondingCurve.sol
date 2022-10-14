@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity ^0.8.3;
 
 interface IETHBondingCurve {
     function buy(uint256 tokenAmount) external payable;

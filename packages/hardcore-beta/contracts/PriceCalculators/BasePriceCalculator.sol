@@ -21,7 +21,7 @@ pragma solidity ^0.8.3;
 
 import "@hegic/utils/contracts/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../Interfaces/IPremiumCalculator.sol";
+import "@hegic/v8888/contracts/Interfaces/IPremiumCalculator.sol";
 
 /**
  * @author 0mllwntrmt3

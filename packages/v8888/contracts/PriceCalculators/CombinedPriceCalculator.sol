@@ -19,7 +19,7 @@ pragma solidity ^0.8.3;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import "../Interfaces/Interfaces.sol";
+import "../Interfaces/IPremiumCalculator.sol";
 import "./BasePriceCalculator.sol";
 
 contract CombinePriceCalculator is BasePriceCalculator {

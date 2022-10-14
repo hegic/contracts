@@ -33,7 +33,37 @@ interface ICoverPool {
         mapping(uint256 => uint256) Share;
     }
 
+    event SetWindowSize(uint32 value);
+    event SetPayoffPool(address value);
+    event SetNextEpochChangingPrice(uint256 value);
+    event EpochStarted(uint256 epochId, uint256 changingPrice);
+    event PaidOut(uint256 epochId, uint256 amount, uint256 coverTokenAmount);
     event Profit(uint256 indexed epoch, uint256 amount);
+    event Claimed(uint256 indexed positionId, uint256 amount);
+
+    event Provided(
+        uint256 indexed positionId,
+        uint256 amount,
+        uint256 shareOfProvide,
+        uint256 shareOfPosition,
+        uint256 totalShare
+    );
+
+    event Withdrawn(
+        uint256 indexed epochId,
+        uint256 indexed positionId,
+        uint256 amount,
+        uint256 shareOfProvide,
+        uint256 shareOfPosition,
+        uint256 totalShare
+    );
+
+    event WithdrawnFromEpoch(
+        uint256 indexed epochId,
+        uint256 indexed positionId,
+        uint256 amount,
+        uint256 profit
+    );
 
     function coverToken() external view returns (IERC20);
 

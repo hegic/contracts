@@ -54,7 +54,7 @@ contract CoverPoolToken is ERC721, AccessControl {
         returns (string memory uri)
     {
         if (address(uriBuilder) == address(0)) return ERC721.tokenURI(tokenId);
-        return ERC721.tokenURI(tokenId);
+        return uriBuilder.tokenURI(tokenId);
     }
 
     function setURIBuilder(IERC721Metadata _uriBuilder)

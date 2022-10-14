@@ -23,7 +23,7 @@ import "./HegicInverseStrategy.sol";
 import "@hegic/utils/contracts/Math.sol";
 
 contract HegicStrategyInverseBearCallSpread is HegicInverseStrategy {
-    uint256 public strikePercentage;
+    uint256 public immutable strikePercentage;
 
     constructor(
         AggregatorV3Interface _priceProvider,

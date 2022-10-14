@@ -22,41 +22,8 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
-import "@hegic/hardcore-beta/contracts/Interfaces/IPremiumCalculator.sol";
-
-// /**
-//  * @author 0mllwntrmt3
-//  * @title Hegic Protocol V8888 Interface
-//  * @notice The interface for the price calculator,
-//  *   options, pools and staking contracts.
-//  **/
-
-// /**
-//  * @notice The interface fot the contract that calculates
-//  *   the options prices (the premiums) that are adjusted
-//  *   through balancing the `ImpliedVolRate` parameter.
-//  **/
-
-// interface IIVLPriceCalculator {
-//     event SetImpliedVolRate(uint256 value);
-//     event SetSettlementFeeShare(uint256 value);
-// }
-
-// interface IPriceCalculator is IIVLPriceCalculator {
-//     /**
-//      * @param period The option period
-//      * @param amount The option size
-//      * @param strike The option strike
-//      **/
-//     function calculateTotalPremium(
-//         uint256 period,
-//         uint256 amount,
-//         uint256 strike
-//     ) external view returns (uint256 settlementFee, uint256 premium);
-// }
+import "./IPremiumCalculator.sol";
 
 interface IAtmPremiumCalculator {
     event SetPolinomCall(int256[5] values);
@@ -79,29 +46,6 @@ interface IAtmPremiumCalculator {
         uint256 strike
     ) external view returns (uint256 premium);
 }
-
-// interface IPremiumCalculator is IIVLPriceCalculator {
-//     event SetBorders(uint256[3] values);
-//     event SetImpliedVolRates(uint256[4] values);
-//     event SetDiscountCall(int256[5] values);
-//     event SetDiscountPut(int256[5] values);
-//     event SetDiscountSpread(uint8 values);
-//     event SetStrikePercentage(uint256 value);
-//     event SetPeriodLimits(uint256 min, uint256 max);
-
-//     /**
-//      * @param period The option period
-//      * @param amount The option size
-//      * @param strike The option strike
-//      **/
-//     function calculatePremium(
-//         uint256 period,
-//         uint256 amount,
-//         uint256 strike
-//     ) external view returns (uint256 premium);
-
-//     function priceProvider() external view returns (AggregatorV3Interface);
-// }
 
 /**
  * @notice The interface for the contract that manages pools and the options parameters,

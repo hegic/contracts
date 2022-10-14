@@ -40,4 +40,13 @@ library HegicMath {
         if (a % 10 < 5) return (a / 10) * 10**decimals;
         return (a / 10 + 1) * 10**decimals;
     }
+
+    function ceilDiv(uint256 enumerator, uint256 denominator)
+        internal
+        pure
+        returns (uint256 result)
+    {
+        if (enumerator % denominator == 0) return enumerator / denominator;
+        return enumerator / denominator + 1;
+    }
 }
