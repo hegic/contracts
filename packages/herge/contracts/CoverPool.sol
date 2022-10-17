@@ -234,7 +234,7 @@ contract CoverPool is
      * @notice total amount of $HEGIC tokens on the Cover Pool
      * @return amount amount of $HEGIC tokens
      **/
-    function coverTokenTotal() public view returns (uint256 amount) {
+    function coverTokenTotal() public view override returns (uint256 amount) {
         return coverToken.balanceOf(address(this)) - unwithdrawnCoverTokens;
     }
 
@@ -274,11 +274,12 @@ contract CoverPool is
         public
         view
         virtual
-        override(CoverPoolToken, AccessControl)
+        override(CoverPoolToken, AccessControl, IERC165)
         returns (bool)
     {
         return
             interfaceId == type(ICoverPool).interfaceId ||
+            interfaceId == type(IERC165).interfaceId ||
             CoverPoolToken.supportsInterface(interfaceId);
     }
 

@@ -9,10 +9,41 @@ import {initializePools} from "../utils/contracts"
 
 describe("HegicStrategyInverseLongButterfly.spec", () => {
   let testData: Fixture
+  const ethAmount = parseUnits("1")
+  const btcAmount = parseUnits("1", 8)
+
+  const period = 86400 * 7
+  let sellEthAtmStrike = parseUnits("1412.1232", 8)
+  let sellBtcAtmStrike = parseUnits("18932", 8)
 
   beforeEach(async () => {
     testData = await fixture()
     await initializePools(testData)
+    const {
+      OperationalTreasury,
+      signers: [deployer, alice, ,],
+      strategies,
+      PriceProviderETH,
+      PriceProviderBTC,
+    } = testData
+
+    await PriceProviderETH.setPrice(sellEthAtmStrike)
+    await OperationalTreasury.connect(alice).buy(
+      strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
+      alice.address,
+      ethAmount,
+      period,
+      [],
+    )
+
+    await PriceProviderBTC.setPrice(sellBtcAtmStrike)
+    await OperationalTreasury.connect(alice).buy(
+      strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
+      alice.address,
+      btcAmount,
+      period,
+      [],
+    )
   })
 
   describe("Should correct exercise and revert Long-Buttefly-10% option", () => {
@@ -21,23 +52,10 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
         const {
           OperationalTreasury,
           signers: [deployer, alice, ,],
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("1")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1000", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
-        const exericsePrice = sellAtmStrike
+        const exericsePrice = sellEthAtmStrike
         await PriceProviderETH.setPrice(exericsePrice)
         await expect(
           OperationalTreasury.connect(deployer).payOff(0, alice.address),
@@ -49,30 +67,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("2")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1412.1232", 8)
         let buyOtmCallStrike = parseUnits("1553.33552", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = parseUnits("1482.72936", 8)
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayoff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           exericsePrice,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -85,30 +90,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("1")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1000", 8)
         let buyOtmCallStrike = parseUnits("1100", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = buyOtmCallStrike
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayoff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           exericsePrice,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -121,30 +113,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("1")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1000", 8)
         let buyOtmCallStrike = parseUnits("1100", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = parseUnits("2000", 8)
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayoff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           buyOtmCallStrike,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -157,31 +136,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("2")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1412.1232", 8)
         let buyOtmPutStrike = parseUnits("1270.91088", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
-
         const exericsePrice = parseUnits("1350", 8)
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           exericsePrice,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -194,30 +159,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("1")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1000", 8)
         let buyOtmPutStrike = parseUnits("900", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = buyOtmPutStrike
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           exericsePrice,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -230,30 +182,17 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderETH,
         } = testData
 
-        const amount = parseUnits("1")
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("1000", 8)
         let buyOtmPutStrike = parseUnits("900", 8)
-
-        await PriceProviderETH.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = parseUnits("20", 8)
         await PriceProviderETH.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           buyOtmPutStrike,
-          amount,
+          ethAmount,
           "ETH",
         )
         await expect(() =>
@@ -267,27 +206,13 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
         const {
           OperationalTreasury,
           signers: [deployer, alice, ,],
-          USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("1", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("20000", 8) //strike which the user sells
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
-        const exericsePrice = sellAtmStrike
+        const exericsePrice = sellBtcAtmStrike
         await PriceProviderBTC.setPrice(exericsePrice)
         await expect(
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).to.be.revertedWith("Invalid strike = Current price")
       })
 
@@ -296,35 +221,22 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("1", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("20000", 8) //strike which the user sells
-        let buyOtmCallStrike = parseUnits("22000", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
+        let buyOtmCallStrike = parseUnits("20825.2", 8)
         const exericsePrice = buyOtmCallStrike
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayoff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           exericsePrice,
-          amount,
+          btcAmount,
           "BTC",
         )
 
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyCallLegPayoff)
       })
 
@@ -333,34 +245,21 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("1", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("20000", 8) //strike which the user sells
-        let buyOtmPutStrike = parseUnits("18000", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
+        let buyOtmPutStrike = parseUnits("17038.8", 8) //strike which the user buys (hedge)
         const exericsePrice = buyOtmPutStrike
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           exericsePrice,
-          amount,
+          btcAmount,
           "BTC",
         )
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyPutLegPayoff)
       })
 
@@ -369,34 +268,21 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("2", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("18932", 8) //strike which the user sells
         let buyOtmPutStrike = parseUnits("17038.8", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
         const exericsePrice = parseUnits("18000", 8)
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           exericsePrice,
-          amount,
+          btcAmount,
           "BTC",
         )
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyPutLegPayoff)
       })
 
@@ -405,34 +291,21 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("2", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("18932", 8) //strike which the user sells
         let buyOtmCallStrike = parseUnits("20825.2", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
-        const exericsePrice = parseUnits("19500", 8)
+        const exericsePrice = parseUnits("20000", 8)
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayofff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           exericsePrice,
-          amount,
+          btcAmount,
           "BTC",
         )
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyCallLegPayofff)
       })
 
@@ -441,34 +314,21 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("1", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("20000", 8) //strike which the user sells
-        let buyOtmCallStrike = parseUnits("22000", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
+        let buyOtmCallStrike = parseUnits("20825.2", 8) //strike which the user buys (hedge)
         const exericsePrice = buyOtmCallStrike
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyCallLegPayoff = getLongButterflyCallLegPayoff(
           buyOtmCallStrike,
           exericsePrice,
-          amount,
+          btcAmount,
           "BTC",
         )
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyCallLegPayoff)
       })
 
@@ -477,34 +337,21 @@ describe("HegicStrategyInverseLongButterfly.spec", () => {
           OperationalTreasury,
           signers: [deployer, alice, ,],
           USDC,
-          strategies,
           PriceProviderBTC,
         } = testData
 
-        const amount = parseUnits("1", 8)
-        const period = 86400 * 7
-        let sellAtmStrike = parseUnits("20000", 8) //strike which the user sells
-        let buyOtmPutStrike = parseUnits("18000", 8) //strike which the user buys (hedge)
-
-        await PriceProviderBTC.setPrice(sellAtmStrike)
-        await OperationalTreasury.connect(alice).buy(
-          strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
-          alice.address,
-          amount,
-          period,
-          [],
-        )
+        let buyOtmPutStrike = parseUnits("17038.8", 8)
         const exericsePrice = parseUnits("10", 8)
         await PriceProviderBTC.setPrice(exericsePrice)
 
         const _getLongButterflyPutLegPayoff = getLongButterflyPutLegPayoff(
           buyOtmPutStrike,
           buyOtmPutStrike,
-          amount,
+          btcAmount,
           "BTC",
         )
         await expect(() =>
-          OperationalTreasury.connect(deployer).payOff(0, alice.address),
+          OperationalTreasury.connect(deployer).payOff(1, alice.address),
         ).changeTokenBalance(USDC, alice, _getLongButterflyPutLegPayoff)
       })
     })

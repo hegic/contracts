@@ -33,7 +33,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
             contract: "CombinePriceCalculator",
             from: deployer,
             log: true,
-            args: [pricers, [1e5, -1e5]],
+            args: [pricers, [1e5, -8e4]],
         })
 
         await deploy(strategyName, {

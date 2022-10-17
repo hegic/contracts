@@ -81,7 +81,7 @@ contract OperationalTreasury is
         bytes[] calldata additional
     ) external override nonReentrant {
         uint256 optionID = manager.createOptionFor(holder);
-        (uint32 expiration, uint256 positivePNL, uint256 negativePNL) = strategy
+        (uint32 expiration, uint256 negativePNL, uint256 positivePNL) = strategy
             .create(optionID, holder, amount, period, additional);
         _lockLiquidity(
             strategy,

@@ -9,10 +9,29 @@ const EXERCISER_ROLE = keccak256(toUtf8Bytes("EXERCISER_ROLE"))
 
 describe("HegicStrategyInverseBearCallSpread.spec", () => {
   let testData: Fixture
+  const ethAmount = parseUnits("1")
+  const period = 86400 * 7
+  let sellEthAtmStrike = parseUnits("1000", 8)
+  let buyEthOtmStrike = parseUnits("1100", 8)
 
   beforeEach(async () => {
     testData = await fixture()
     await initializePools(testData)
+    const {
+      OperationalTreasury,
+      signers: [, alice, ,],
+      strategies,
+      PriceProviderETH,
+    } = testData
+
+    await PriceProviderETH.setPrice(sellEthAtmStrike)
+    await OperationalTreasury.connect(alice).buy(
+      strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
+      alice.address,
+      ethAmount,
+      period,
+      [],
+    )
   })
 
   describe("Should correct exercise Bear-Call-Spread-10% option", () => {
@@ -20,22 +39,7 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
       const {
         OperationalTreasury,
         signers: [, alice, ,],
-        strategies,
-        PriceProviderETH,
       } = testData
-
-      const amount = parseUnits("1")
-      const period = 86400 * 7
-      let sellAtmStrike = parseUnits("1000", 8) //strike which the user sells
-
-      await PriceProviderETH.setPrice(sellAtmStrike)
-      await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
-        alice.address,
-        amount,
-        period,
-        [],
-      )
 
       await expect(
         OperationalTreasury.connect(alice).unlock(0),
@@ -46,22 +50,9 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
       const {
         OperationalTreasury,
         signers: [, alice, ,],
-        strategies,
         PriceProviderETH,
       } = testData
 
-      const amount = parseUnits("1")
-      const period = 86400 * 7
-      let sellAtmStrike = parseUnits("1000", 8) //strike which the user sells
-
-      await PriceProviderETH.setPrice(sellAtmStrike)
-      await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
-        alice.address,
-        amount,
-        period,
-        [],
-      )
       const exericsePrice = parseUnits("1051", 8)
       await PriceProviderETH.setPrice(exericsePrice)
 
@@ -74,26 +65,12 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
       const {
         OperationalTreasury,
         signers: [deployer, alice, ,],
-        strategies,
         PriceProviderETH,
         USDC,
       } = testData
 
-      const amount = parseUnits("1")
-      const period = 86400 * 7
-      let sellAtmStrike = parseUnits("1000", 8) //strike which the user sells
-
-      await PriceProviderETH.setPrice(sellAtmStrike)
-      await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
-        alice.address,
-        amount,
-        period,
-        [],
-      )
-      let newPrice = parseUnits("10000", 8) //strike which the user sells
+      let newPrice = parseUnits("10000", 8)
       await PriceProviderETH.setPrice(newPrice)
-
       await timeAndMine.setTimeIncrease("8d")
 
       await expect(() =>
@@ -104,24 +81,10 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
     it("should unlock option when period is passed [ADMIN]", async () => {
       const {
         OperationalTreasury,
-        signers: [deployer, alice, bob],
-        strategies,
-        PriceProviderETH,
+        signers: [, alice, bob],
         USDC,
       } = testData
 
-      const amount = parseUnits("1")
-      const period = 86400 * 7
-      let sellAtmStrike = parseUnits("1000", 8) //strike which the user sells
-
-      await PriceProviderETH.setPrice(sellAtmStrike)
-      await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
-        alice.address,
-        amount,
-        period,
-        [],
-      )
       await timeAndMine.setTimeIncrease("8d")
 
       await expect(() =>
@@ -138,19 +101,6 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
         PriceProviderETH,
       } = testData
 
-      const amount = parseUnits("1")
-      const period = 86400 * 7
-      let sellAtmStrike = parseUnits("1000", 8) //strike which the user sells
-      let buyOtmStrike = parseUnits("1100", 8) //strike which the user buys (hedge)
-
-      await PriceProviderETH.setPrice(sellAtmStrike)
-      await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH.address,
-        alice.address,
-        amount,
-        period,
-        [],
-      )
       const exericsePrice = parseUnits("1051", 8)
       await PriceProviderETH.setPrice(exericsePrice)
 
@@ -160,9 +110,9 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
       ) //grant EXERICSER_ROLE to the Alice
 
       const _getBearCallSpreadPayoff = getBearCallSpreadPayoff(
-        buyOtmStrike,
+        buyEthOtmStrike,
         exericsePrice,
-        amount,
+        ethAmount,
         "ETH",
       )
 

@@ -21,7 +21,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
         const contract = "HegicStrategySpreadPut"
         const spotDecimals = { ETH: 18, BTC: 8 }[params.currency]
 
-        const otmPricer = `PriceCalculator_PUT_${100-params.scale}_${params.currency}`
+        const otmPricer = `PriceCalculator_PUT_${100 - params.scale}_${params.currency}`
         const atmPricer = `PriceCalculator_PUT_100_${params.currency}`
 
         const pricers = [
@@ -33,7 +33,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
             contract: "CombinePriceCalculator",
             from: deployer,
             log: true,
-            args: [pricers, [-1e5, 1e5]],
+            args: [pricers, [-8e4, 1e5]],
         })
 
         await deploy(strategyName, {

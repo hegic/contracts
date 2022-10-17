@@ -52,6 +52,12 @@ export default {
       url: "http://127.0.0.1:8555",
       gasPrice: 100e9,
     },
+    localhost: {
+      accounts:{
+        mnemonic: "myth like bonus scare over problem client lizard pioneer submit female collect"
+      },
+      gasPrice: 100e9,
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,

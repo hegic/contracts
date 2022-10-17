@@ -21,7 +21,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-interface ICoverPool {
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+interface ICoverPool is IERC721 {
     struct Epoch {
         uint256 start;
         uint256 cumulativePoint;
@@ -77,10 +79,13 @@ interface ICoverPool {
 
     function claim(uint256 psoitionId) external returns (uint256 amount);
 
-    function currentEpoch() external returns (uint256 epochID);
+    function currentEpoch() external view returns (uint256 epochID);
+
+    function coverTokenTotal() external view returns (uint256 amount);
 
     function epoch(uint256 id)
         external
+        view
         returns (
             uint256 start,
             uint256 cumulativePoint,

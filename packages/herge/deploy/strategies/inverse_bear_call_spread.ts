@@ -21,22 +21,22 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
         const pricerName = `PriceCalculator_INVERSE_BEAR_CALL_SPREAD_${params.percent}_${params.currency}`
         const strategyName = `HegicStrategy_INVERSE_BEAR_CALL_SPREAD_${params.percent}_${params.currency}`
         const spotDecimals = { ETH: 18, BTC: 8 }[params.currency]
-    
+
         const atmPricer = `PriceCalculator_CALL_100_${params.currency}`
         const otmPricer = `PriceCalculator_CALL_${100 + params.percent}_${params.currency}`
-    
+
         const pricers = [
-          (await get(atmPricer)).address,
-          (await get(otmPricer)).address,
+            (await get(atmPricer)).address,
+            (await get(otmPricer)).address,
         ]
-    
+
         const pricer = await get(pricerName).catch(() =>
-          deploy(pricerName, {
-            contract: "CombinePriceCalculator",
-            from: deployer,
-            log: true,
-            args: [pricers, _params.priceCoefficients],
-          }),
+            deploy(pricerName, {
+                contract: "CombinePriceCalculator",
+                from: deployer,
+                log: true,
+                args: [pricers, _params.priceCoefficients],
+            }),
         )
 
         await deploy(strategyName, {

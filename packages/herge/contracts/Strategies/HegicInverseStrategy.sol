@@ -80,11 +80,11 @@ abstract contract HegicInverseStrategy is HegicStrategy, IHegicInverseStrategy {
         override
         returns (
             uint32 expiration,
-            uint256 positivePNL,
-            uint256 negativePNL
+            uint256 negativePNL,
+            uint256 positivePNL
         )
     {
-        (positivePNL, negativePNL) = calculateNegativepnlAndPositivepnl(
+        (negativePNL, positivePNL) = calculateNegativepnlAndPositivepnl(
             amount,
             period,
             additional
