@@ -56,16 +56,18 @@ abstract contract HegicInverseStrategy is HegicStrategy, IHegicInverseStrategy {
         positivepnl = collateral - uint128(negativepnl);
     }
 
-    function isPayoffAvailable(uint256 optionID, address caller)
-        external
-        view
-        override(IHegicStrategy, HegicStrategy)
-        returns (bool)
-    {
-        return
-            (hasRole(EXERCISER_ROLE, caller) &&
-                _calculateStrategyPayOff(optionID) > 0) ||
-            block.timestamp > positionExpiration[optionID];
+    function isPayoffAvailable(
+        uint256 positionID,
+        address caller,
+        address recipient
+    ) external view override(IHegicStrategy, HegicStrategy) returns (bool) {
+        if (pool.manager().ownerOf(positionID) != recipient) return false;
+        if (block.timestamp < positionExpiration[positionID]) {
+            return
+                hasRole(EXERCISER_ROLE, caller) &&
+                _calculateStrategyPayOff(positionID) > 0;
+        }
+        return true;
     }
 
     function _create(

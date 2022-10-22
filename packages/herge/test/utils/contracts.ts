@@ -1,27 +1,20 @@
 import {Fixture} from "./fixtures"
 import {keccak256, parseUnits, toUtf8Bytes} from "ethers/lib/utils"
-import {BigNumberish, constants} from "ethers"
-import yaml from "yaml"
-import fs from "fs"
+import {constants} from "ethers"
 
 const OPERATIONAL_TRESUARY_ROLE = keccak256(
   toUtf8Bytes("OPERATIONAL_TRESUARY_ROLE"),
 )
 
 export async function initializePools({
-  OptionsManager,
+  PositionsManager,
   OperationalTreasury,
   HEGIC,
   CoverPool,
   USDC,
   payoffPool,
   signers: [deployer, alice, bob, carl],
-  pricers,
-  PriceProviderETH,
 }: Fixture) {
-  //Pricers
-
-  //Cover Pool
   await HEGIC.mint(carl.address, parseUnits("1000000000000"))
   await HEGIC.connect(carl).approve(CoverPool.address, constants.MaxUint256)
 
@@ -47,13 +40,11 @@ export async function initializePools({
     OperationalTreasury.address,
   )
 
-  //todo transfer to deploy
-  await OptionsManager.grantRole(
-    await OptionsManager.HEGIC_POOL_ROLE(),
+  await PositionsManager.grantRole(
+    await PositionsManager.HEGIC_POOL_ROLE(),
     OperationalTreasury.address,
   )
 
-  //Operational
   await USDC.mint(OperationalTreasury.address, 100000e6)
   await USDC.mint(alice.address, parseUnits("10000000000000"))
 

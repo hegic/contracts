@@ -78,7 +78,19 @@ describe("HegicStrategyInverseBearCallSpread.spec", () => {
       ).changeTokenBalance(USDC, alice, parseUnits("100", 6))
     })
 
-    it("should unlock option when period is passed [ADMIN]", async () => {
+    it("should revert transcation when recipient isn't owner of the option", async () => {
+      const {
+        OperationalTreasury,
+        signers: [, , bob],
+      } = testData
+
+      await timeAndMine.setTimeIncrease("8d")
+      await expect(
+        OperationalTreasury.connect(bob).payOff(0, bob.address),
+      ).to.be.revertedWith("You can not execute this option strat")
+    })
+
+    it("should send profit to the option holder when option is expired", async () => {
       const {
         OperationalTreasury,
         signers: [, alice, bob],

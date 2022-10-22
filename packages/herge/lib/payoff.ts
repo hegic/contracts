@@ -1,8 +1,8 @@
-import {type BigNumber, constants} from "ethers"
-import {parseUnits} from "ethers/lib/utils"
-import {calculateStrikes} from "./strikes"
+import { type BigNumber, constants } from "ethers"
+import { parseUnits } from "ethers/lib/utils"
+import { calculateStrikes } from "./strikes"
 
-import {getStrategyInfo, type StrategyName} from "./Strategy"
+import { getStrategyInfo, type StrategyName } from "./Strategy"
 
 export function calculatePayoff(
   strategy: StrategyName,
@@ -181,10 +181,11 @@ export function calculatePayoff(
       if (price.lt(buyOtmPutStrike))
         return getBullPutSpreadPayoff(
           buyOtmPutStrike,
-          strikePoint,
+          buyOtmPutStrike,
           amount,
           stratInfo.asset,
         )
+
       else if (price.lt(strikePoint))
         return getBullPutSpreadPayoff(
           buyOtmPutStrike,
@@ -192,7 +193,13 @@ export function calculatePayoff(
           amount,
           stratInfo.asset,
         )
-      else return constants.Zero
+
+      else return getBullPutSpreadPayoff(
+        buyOtmPutStrike,
+        strikePoint,
+        amount,
+        stratInfo.asset,
+      )
     }
 
     default:

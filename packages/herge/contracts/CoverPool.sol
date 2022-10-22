@@ -23,12 +23,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@hegic/utils/contracts/Math.sol";
+import "@hegic/utils/contracts/ERC721WithURIBuilder.sol";
 import "./ICoverPool.sol";
-import "./CoverPoolToken.sol";
 
 contract CoverPool is
     AccessControl,
-    CoverPoolToken("TODO: TokenName", "TODO: TokenSymbol"),
+    ERC721WithURIBuilder("Hegic Herge Stake & Cover", "HEGSC"),
     ICoverPool
 {
     using SafeERC20 for IERC20;
@@ -274,13 +274,13 @@ contract CoverPool is
         public
         view
         virtual
-        override(CoverPoolToken, AccessControl, IERC165)
+        override(ERC721WithURIBuilder, AccessControl, IERC165)
         returns (bool)
     {
         return
             interfaceId == type(ICoverPool).interfaceId ||
             interfaceId == type(IERC165).interfaceId ||
-            CoverPoolToken.supportsInterface(interfaceId);
+            ERC721WithURIBuilder.supportsInterface(interfaceId);
     }
 
     // ╒═══════════════════════════════════════════╕

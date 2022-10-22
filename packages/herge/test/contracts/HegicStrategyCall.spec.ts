@@ -59,6 +59,72 @@ describe("HegicStrategyCall", () => {
     )
   })
 
+  describe("Limits and collaterezation", async () => {
+    it("should correct calcualte 'negativePnL' when 'setK' = 200", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setK(200)
+      await OperationalTreasury.connect(alice).buy(
+        strategies.HegicStrategy_CALL_100_ETH.address,
+        alice.address,
+        parseUnits("1"),
+        period,
+        [],
+      )
+
+      expect(
+        (await OperationalTreasury.lockedLiquidity(4)).negativepnl,
+      ).to.be.eq(parseUnits("180.086914", 6))
+
+      expect(
+        (await OperationalTreasury.lockedLiquidity(4)).positivepnl,
+      ).to.be.eq(parseUnits("90.043457", 6))
+    })
+
+    it("should correct calcualte 'negativePnL' when 'setK' = 50", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setK(50)
+      await OperationalTreasury.connect(alice).buy(
+        strategies.HegicStrategy_CALL_100_ETH.address,
+        alice.address,
+        parseUnits("1"),
+        period,
+        [],
+      )
+
+      expect(
+        (await OperationalTreasury.lockedLiquidity(4)).negativepnl,
+      ).to.be.eq(parseUnits("45.021728", 6))
+
+      expect(
+        (await OperationalTreasury.lockedLiquidity(4)).positivepnl,
+      ).to.be.eq(parseUnits("90.043457", 6))
+    })
+
+    it("should set new 'SetLimit'", async () => {
+      const {
+        signers: [deployer],
+        strategies,
+      } = testData
+      const newLimit = parseUnits("100", 6)
+      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setLimit(
+        newLimit,
+      )
+      expect(
+        await strategies.HegicStrategy_CALL_100_ETH.lockedLimit(),
+      ).to.be.eq(newLimit)
+    })
+  })
+
   describe("Should correct exercise option", async () => {
     it("ETH-ATM", async () => {
       const {

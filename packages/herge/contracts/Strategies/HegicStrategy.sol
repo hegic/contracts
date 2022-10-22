@@ -198,13 +198,12 @@ abstract contract HegicStrategy is
     /**
      * TODO
      **/
-    function isPayoffAvailable(uint256 optionID, address caller)
-        external
-        view
-        virtual
-        override
-        returns (bool)
-    {
+
+    function isPayoffAvailable(
+        uint256 optionID,
+        address caller,
+        address /*recipient*/
+    ) external view virtual override returns (bool) {
         return
             pool.manager().isApprovedOrOwner(caller, optionID) &&
             _calculateStrategyPayOff(optionID) > 0;

@@ -22,8 +22,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  **/
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@hegic/utils/contracts/IERC721WithURIBuilder.sol";
 
-interface ICoverPool is IERC721 {
+interface ICoverPool is IERC721WithURIBuilder {
     struct Epoch {
         uint256 start;
         uint256 cumulativePoint;

@@ -23,7 +23,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@hegic/v8888/contracts/OptionsManager/IOptionsManager.sol";
+import "./PositionsManager/IPositionsManager.sol";
 import "./IOperationalTreasury.sol";
 import "./ICoverPool.sol";
 
@@ -35,7 +35,7 @@ contract OperationalTreasury is
     using SafeERC20 for IERC20;
 
     IERC20 public immutable override token;
-    IOptionsManager public immutable override manager;
+    IPositionsManager public immutable override manager;
     ICoverPool public immutable override coverPool;
     mapping(uint256 => LockedLiquidity) public override lockedLiquidity;
     mapping(IHegicStrategy => uint256) public override lockedByStrategy;
@@ -50,7 +50,7 @@ contract OperationalTreasury is
 
     constructor(
         IERC20 _token,
-        IOptionsManager _manager,
+        IPositionsManager _manager,
         uint256 _maxLockupPeriod,
         ICoverPool _coverPool,
         uint256 _benchmark,
@@ -149,32 +149,30 @@ contract OperationalTreasury is
     /**
      * @notice Used for paying off the profits
      * if an option is exercised in-the-money
-     * @param lockedLiquidityID The option contract ID
-     * @param account The holder address
+     * @param positionID The option contract ID
      **/
-    function payOff(uint256 lockedLiquidityID, address account)
+    function payOff(uint256 positionID, address account)
         external
         override
         nonReentrant
     {
-        LockedLiquidity storage ll = lockedLiquidity[lockedLiquidityID];
-        uint256 amount = ll.strategy.payOffAmount(lockedLiquidityID);
+        LockedLiquidity storage ll = lockedLiquidity[positionID];
+        uint256 amount = ll.strategy.payOffAmount(positionID);
         require(
             ll.expiration > block.timestamp,
             "The option has already expired"
         );
         require(
-            ll.strategy.isPayoffAvailable(lockedLiquidityID, msg.sender),
+            ll.strategy.isPayoffAvailable(positionID, msg.sender, account),
             "You can not execute this option strat"
         );
-        require(account != address(0), "b");
 
         _unlock(ll);
         if (totalBalance() < amount) {
             _replenish(amount);
         }
         _withdraw(account, amount);
-        emit Paid(lockedLiquidityID, account, amount);
+        emit Paid(positionID, account, amount);
     }
 
     /**

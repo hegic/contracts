@@ -2,8 +2,8 @@ import {expect} from "chai"
 import {fixture, Fixture} from "../utils/fixtures"
 import {parseUnits, keccak256, toUtf8Bytes} from "ethers/lib/utils"
 import {constants} from "ethers"
-import {timeAndMine, ethers as e2} from "hardhat"
-import {parse} from "path"
+import {timeAndMine, ethers} from "hardhat"
+import {HegicStrategyCallFactory} from "../../typechain"
 
 const OPERATIONAL_TRESUARY_ROLE = keccak256(
   toUtf8Bytes("OPERATIONAL_TRESUARY_ROLE"),
@@ -25,7 +25,7 @@ describe("Operational Pool", () => {
   beforeEach(async () => {
     const {
       PriceProviderETH,
-      OptionsManager,
+      PositionsManager,
       OperationalTreasury,
       HEGIC,
       CoverPool,
@@ -60,8 +60,8 @@ describe("Operational Pool", () => {
       OperationalTreasury.address,
     )
 
-    await OptionsManager.grantRole(
-      await OptionsManager.HEGIC_POOL_ROLE(),
+    await PositionsManager.grantRole(
+      await PositionsManager.HEGIC_POOL_ROLE(),
       OperationalTreasury.address,
     )
 
@@ -85,6 +85,61 @@ describe("Operational Pool", () => {
       period,
       [],
     )
+  })
+
+  describe("Should add new strategy", () => {
+    it("should buy ETH-OTM-CALL-5%", async () => {
+      const {
+        OperationalTreasury,
+        CoverPool,
+        PriceProviderETH,
+        pricers: {PriceCalculator_CALL_100_ETH},
+        signers: [deployer, alice, ,],
+        USDC,
+      } = testData
+
+      const newEthOtmCall = await ethers
+        .getContractFactory<HegicStrategyCallFactory>("HegicStrategyCall", {
+          libraries: {
+            ProfitCalculator: (
+              await ethers.getContract("ProfitCalculator")
+            ).address,
+          },
+        })
+        .then((f) =>
+          f.deploy(
+            PriceProviderETH.address,
+            PriceCalculator_CALL_100_ETH.address,
+            ethers.constants.MaxUint256,
+            18,
+            10500,
+          ),
+        )
+      await OperationalTreasury.connect(deployer).addStrategy(
+        newEthOtmCall.address,
+      )
+      await timeAndMine.setTimeIncrease("30d")
+      await CoverPool.connect(deployer).fixProfit()
+      await OperationalTreasury.connectStrategy(newEthOtmCall.address)
+
+      const strikePoint = parseUnits("1000", 8)
+      await PriceProviderETH.setPrice(strikePoint)
+
+      await OperationalTreasury.connect(alice).buy(
+        newEthOtmCall.address,
+        alice.address,
+        ethAmount, //amount = 1
+        period,
+        [],
+      )
+      const exercisePrice = parseUnits("1200", 8)
+      await PriceProviderETH.setPrice(exercisePrice)
+      const payoff = parseUnits("150", 6)
+
+      await expect(() =>
+        OperationalTreasury.connect(alice).payOff(1, alice.address),
+      ).changeTokenBalance(USDC, alice, payoff)
+    })
   })
 
   describe("Should correct calculate option cost", () => {
@@ -564,6 +619,266 @@ describe("Operational Pool", () => {
           [optionCost, optionCost.mul(-1)],
         )
       })
+
+      it("Bear-Call-Spread-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("149.763140", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_20_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bear-Call-Spread-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("247.722864", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_30_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-10%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("62.382321", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_10_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("152.377178", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_20_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("248.482508", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_30_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-10%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("22.050234", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("102.140317", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_20_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("196.205372", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_30_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Condor-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("80.090084", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_CONDOR_20_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Condor-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+          pricers,
+        } = testData
+
+        const optionCost = parseUnits("174.155139", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_CONDOR_30_ETH.address,
+            alice.address,
+            ethAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
     })
 
     describe("BTC", () => {
@@ -1030,6 +1345,256 @@ describe("Operational Pool", () => {
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
             strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bear-Call-Spread-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("3486.164950", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_20_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bear-Call-Spread-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("5477.803173", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BEAR_CALL_SPREAD_30_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-10%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("1590.505255", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_10_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("3496.134469", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_20_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Bull-Put-Spread-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("5479.353800", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_BULL_PUT_SPREAD_30_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-10%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("1146.227693", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("2982.299419", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_20_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Butterfly-30%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("4957.156973", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_BUTTERFLY_30_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Condor-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("1836.071726", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_CONDOR_20_BTC.address,
+            alice.address,
+            btcAmount,
+            period,
+            [],
+          ),
+        ).changeTokenBalances(
+          USDC,
+          [OperationalTreasury, alice],
+          [optionCost, optionCost.mul(-1)],
+        )
+      })
+
+      it("Long-Condor-20%", async () => {
+        const {
+          OperationalTreasury,
+          strategies,
+          signers: [, alice, ,],
+          USDC,
+        } = testData
+
+        const optionCost = parseUnits("3810.929280", 6)
+
+        await expect(() =>
+          OperationalTreasury.connect(alice).buy(
+            strategies.HegicStrategy_INVERSE_LONG_CONDOR_30_BTC.address,
             alice.address,
             btcAmount,
             period,

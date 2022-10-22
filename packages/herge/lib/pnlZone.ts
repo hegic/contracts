@@ -1,7 +1,7 @@
-import {BigNumber, constants} from "ethers"
-import {calculateStrikes} from "./strikes"
-import type {PNLZone} from "./IPNLZone"
-import {getStrategyInfo, type StrategyName} from "./Strategy"
+import { BigNumber, constants } from "ethers"
+import { calculateStrikes } from "./strikes"
+import type { PNLZone } from "./IPNLZone"
+import { getStrategyInfo, type StrategyName } from "./Strategy"
 
 export function calculatePNLZone(
   strategy: StrategyName,
@@ -24,9 +24,9 @@ export function calculatePNLZone(
         positivepnl,
       )
       return {
-        left: {profit: true, value: lValue},
-        center: {profit: false, from: price_0, to: price_0},
-        right: {profit: true, value: rValue},
+        left: { profit: true, value: lValue },
+        center: { profit: false, from: price_0, to: price_0 },
+        right: { profit: true, value: rValue },
       }
     }
 
@@ -39,9 +39,9 @@ export function calculatePNLZone(
       )
       const [p0, p1] = calculateStrikes(strategy, price_0)
       return {
-        left: {profit: true, value: lValue},
-        center: {profit: false, from: p0, to: p1},
-        right: {profit: true, value: rValue},
+        left: { profit: true, value: lValue },
+        center: { profit: false, from: p0, to: p1 },
+        right: { profit: true, value: rValue },
       }
     }
 
@@ -52,12 +52,12 @@ export function calculatePNLZone(
       const [value] = calculateBreakEven(
         strategy,
         amount,
-        STRIKE_PUT,
+        price_0,
         positivepnl,
       )
       return {
-        left: {profit: true, value},
-        right: {profit: false, value: STRIKE_PUT},
+        left: { profit: true, value },
+        right: { profit: false, value: price_0 },
       }
     }
 
@@ -72,8 +72,8 @@ export function calculatePNLZone(
         positivepnl,
       )
       return {
-        left: {profit: true, value},
-        right: {profit: false, value: STRIKE_PUT},
+        left: { profit: true, value },
+        right: { profit: false, value: STRIKE_PUT },
       }
     }
     case "SPREAD_CALL": {
@@ -83,12 +83,12 @@ export function calculatePNLZone(
       const [value] = calculateBreakEven(
         strategy,
         amount,
-        STRIKE_CALL,
+        price_0,
         positivepnl,
       )
       return {
-        right: {profit: true, value},
-        left: {profit: false, value: STRIKE_CALL},
+        right: { profit: true, value },
+        left: { profit: false, value: price_0 },
       }
     }
     case "CALL": {
@@ -100,19 +100,19 @@ export function calculatePNLZone(
         positivepnl,
       )
       return {
-        right: {profit: true, value},
-        left: {profit: false, value: STRIKE_CALL},
+        right: { profit: true, value },
+        left: { profit: false, value: STRIKE_CALL },
       }
     }
     case "INVERSE_BULL_PUT_SPREAD": {
       const [otms, atms] = calculateStrikes(strategy, price_0)
-      const collateral = atms.sub(otms).mul(amount).div(decimals)
+      const negativepnl = (atms.sub(otms).mul(amount).div(decimals)).sub(positivepnl)
       return {
         right: {
           profit: true,
           value: amount
             .mul(atms)
-            .sub(collateral.sub(positivepnl).mul(decimals))
+            .sub((negativepnl).mul(decimals))
             .div(amount),
         },
         left: {
@@ -124,7 +124,8 @@ export function calculatePNLZone(
 
     case "INVERSE_BEAR_CALL_SPREAD":
       const [atms, otms] = calculateStrikes(strategy, price_0)
-      const collateral = otms.sub(atms).mul(amount).div(decimals)
+      const negativepnl = (otms.sub(atms).mul(amount).div(decimals)).sub(positivepnl)
+
       return {
         right: {
           profit: false,
@@ -134,7 +135,7 @@ export function calculatePNLZone(
           profit: true,
           value: amount
             .mul(price_0)
-            .add(collateral.sub(positivepnl).mul(decimals))
+            .add((negativepnl).mul(decimals))
             .div(amount),
         },
       }
@@ -145,7 +146,7 @@ export function calculatePNLZone(
       const d2 = otmcall.sub(atms)
       const d = d1.gt(d2) ? d1 : d2
       // console.log(otmput, atms, otmcall)
-      const collateral = d.mul(amount).div(decimals)
+      const negativepnl = (d.mul(amount).div(decimals)).sub(positivepnl)
 
       return {
         right: {
@@ -156,11 +157,11 @@ export function calculatePNLZone(
           profit: true,
           from: amount
             .mul(price_0)
-            .sub(collateral.sub(positivepnl).mul(decimals))
+            .sub((negativepnl).mul(decimals))
             .div(amount),
           to: amount
             .mul(price_0)
-            .add(collateral.sub(positivepnl).mul(decimals))
+            .add((negativepnl).mul(decimals))
             .div(amount),
         },
         left: {
@@ -170,12 +171,13 @@ export function calculatePNLZone(
       }
     }
     case "INVERSE_LONG_CONDOR": {
-      const [p0, p1, p2, p3] = calculateStrikes(strategy, price_0)
+      const [, p0, p1, p2, p3] = calculateStrikes(strategy, price_0)
       const d1 = p1.sub(p0)
       const d2 = p3.sub(p2)
       const d = d1.gt(d2) ? d1 : d2
 
-      const collateral = d.mul(amount).div(decimals)
+      const negativepnl = (d.mul(amount).div(decimals)).sub(positivepnl)
+
 
       return {
         right: {
@@ -186,11 +188,11 @@ export function calculatePNLZone(
           profit: true,
           from: amount
             .mul(p1)
-            .sub(collateral.sub(positivepnl).mul(decimals))
+            .sub((negativepnl).mul(decimals))
             .div(amount),
           to: amount
             .mul(p2)
-            .add(collateral.sub(positivepnl).mul(decimals))
+            .add((negativepnl).mul(decimals))
             .div(amount),
         },
         left: {

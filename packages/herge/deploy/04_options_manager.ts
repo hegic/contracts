@@ -5,11 +5,11 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
   const {deploy} = deployments
   const {deployer} = await getNamedAccounts()
 
-  await deploy("OptionsManager", {
+  await deploy("PositionsManager", {
     from: deployer,
     log: true,
   })
 }
 
-deployment.tags = ["test", "options-manager"]
+deployment.tags = ["test", "positions-manager"]
 export default deployment

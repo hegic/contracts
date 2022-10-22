@@ -3,7 +3,7 @@ pragma solidity ^0.8.3;
 /**
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Hegic
- * Copyright (C) 2021 Hegic Protocol
+ * Copyright (C) 2022 Hegic Protocol
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,22 +21,24 @@ pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./IERC721WithURIBuilder.sol";
 
-contract CoverPoolToken is ERC721, AccessControl {
-    IERC721Metadata public uriBuilder;
+contract ERC721WithURIBuilder is ERC721, AccessControl, IERC721WithURIBuilder {
+    IERC721Metadata public override uriBuilder;
 
     constructor(string memory name, string memory symbol)
         ERC721(name, symbol)
     {}
 
     /**
-     * @dev See :sol:interface:`ICoverPool`
-     */
+     * @dev See EIP-165: ERC-165 Standard Interface Detection
+     * https://eips.ethereum.org/EIPS/eip-165
+     **/
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC721, AccessControl)
+        override(IERC165, ERC721, AccessControl)
         returns (bool)
     {
         return
@@ -59,6 +61,7 @@ contract CoverPoolToken is ERC721, AccessControl {
 
     function setURIBuilder(IERC721Metadata _uriBuilder)
         external
+        override
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         uriBuilder = _uriBuilder;
@@ -67,6 +70,7 @@ contract CoverPoolToken is ERC721, AccessControl {
     function isApprovedOrOwner(address spender, uint256 tokenId)
         external
         view
+        override
         returns (bool)
     {
         return _isApprovedOrOwner(spender, tokenId);

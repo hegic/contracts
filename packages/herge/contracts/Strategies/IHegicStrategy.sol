@@ -45,10 +45,11 @@ interface IHegicStrategy {
 
     function lockedLimit() external view returns (uint256 value);
 
-    function isPayoffAvailable(uint256 optID, address caller)
-        external
-        view
-        returns (bool);
+    function isPayoffAvailable(
+        uint256 optID,
+        address caller,
+        address recipient
+    ) external view returns (bool);
 
     function payOffAmount(uint256 optionID)
         external

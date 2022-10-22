@@ -207,40 +207,6 @@ describe("CoverPool", () => {
         ),
       ).to.be.reverted
     })
-
-    it("Should automatically go to the next epoch if enabled ", async () => {
-      const {
-        CoverPool,
-        payoffPool,
-        signers: [deployer, alice, bob, carl],
-        USDC,
-        HEGIC,
-      } = testData
-      const TEMPORARY_ADMIN_ROLE = keccak256(
-        toUtf8Bytes("TEMPORARY_ADMIN_ROLE"),
-      )
-      const OPERATIONAL_TRESUARY_ROLE = keccak256(
-        toUtf8Bytes("OPERATIONAL_TRESUARY_ROLE"),
-      )
-      //todo
-    })
-
-    it("Should revert transcation when user trying to withdraw HEGIC within WINDOWS SIZE Period ", async () => {
-      const {
-        CoverPool,
-        payoffPool,
-        signers: [deployer, alice, bob, carl],
-        USDC,
-        HEGIC,
-      } = testData
-      const TEMPORARY_ADMIN_ROLE = keccak256(
-        toUtf8Bytes("TEMPORARY_ADMIN_ROLE"),
-      )
-      const OPERATIONAL_TRESUARY_ROLE = keccak256(
-        toUtf8Bytes("OPERATIONAL_TRESUARY_ROLE"),
-      )
-      //todo
-    })
   })
 })
 

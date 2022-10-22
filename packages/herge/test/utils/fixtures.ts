@@ -1,6 +1,6 @@
 import {deployments, ethers} from "hardhat"
 import {
-  OptionsManager,
+  PositionsManager,
   PriceProviderMock,
   OperationalTreasury,
   ProfitDistributor,
@@ -181,9 +181,9 @@ export async function getContracts() {
     OperationalTreasury: (await ethers.getContract(
       "OperationalTreasury",
     )) as OperationalTreasury,
-    OptionsManager: (await ethers.getContract(
-      "OptionsManager",
-    )) as OptionsManager,
+    PositionsManager: (await ethers.getContract(
+      "PositionsManager",
+    )) as PositionsManager,
     BasePriceCalculator_PUT_ETH: (await ethers.getContract(
       "PriceCalculator_PUT_100_ETH",
     )) as PolynomialPriceCalculator,

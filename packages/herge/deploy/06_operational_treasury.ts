@@ -8,7 +8,7 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
 
   const params = {
     token: (await get("USDC")).address,
-    manager: (await get("OptionsManager")).address,
+    manager: (await get("PositionsManager")).address,
     maxLockupPeriod: 90 * 24 * 3600, // 90 days
     coverPool: (await get("CoverPool")).address,
     benchmark: parseUnits("300000", 6),

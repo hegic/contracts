@@ -27,7 +27,6 @@ export default {
     paths: [
       "@hegic/utils/contracts/Mocks/ERC20Mock.sol",
       "@hegic/utils/contracts/Mocks/PriceProviderMock.sol",
-      "@hegic/v8888/contracts/OptionsManager/OptionsManager.sol",
       "@hegic/v8888/contracts/PriceCalculators/PolynomialPriceCalculator.sol",
       "@hegic/v8888/contracts/PriceCalculators/CombinedPriceCalculator.sol",
     ]

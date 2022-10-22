@@ -21,7 +21,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
   const OperationalTreasury = await get("OperationalTreasury")
 
   await execute("CoverPool", {from: deployer}, "grantRole", OPERATIONAL_TRESUARY_ROLE, OperationalTreasury.address)
-  await execute("OptionsManager", {from: deployer}, "grantRole", HEGIC_POOL_ROLE, OperationalTreasury.address)
+  await execute("PositionsManager", {from: deployer}, "grantRole", HEGIC_POOL_ROLE, OperationalTreasury.address)
 
   await execute("USDC", {from: deployer}, "mint", OperationalTreasury.address, parseUnits("300000", 6))
 

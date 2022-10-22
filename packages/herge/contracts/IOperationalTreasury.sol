@@ -19,9 +19,10 @@ pragma solidity ^0.8.3;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@hegic/v8888/contracts/OptionsManager/IOptionsManager.sol";
 import "./ICoverPool.sol";
+import "./PositionsManager/IPositionsManager.sol";
 import "./Strategies/IHegicStrategy.sol";
 
 interface IOperationalTreasury {
@@ -44,11 +45,11 @@ interface IOperationalTreasury {
 
     function coverPool() external view returns (ICoverPool);
 
-    function manager() external view returns (IOptionsManager);
+    function manager() external view returns (IPositionsManager);
 
     function token() external view returns (IERC20);
 
-    function payOff(uint256 lockedLiquidityID, address account) external;
+    function payOff(uint256 positionID, address account) external;
 
     function lockedByStrategy(IHegicStrategy strategy)
         external
