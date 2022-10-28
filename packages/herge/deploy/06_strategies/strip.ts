@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { parseUnits } from "ethers/lib/utils"
+import limits_arbitrum from "./.limits.json"
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
@@ -9,15 +10,18 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
 
     const _params = {
         currency: "",
-        limit: parseUnits("10000", 6),
+        default_limit: parseUnits("10000", 6),
+        limits:{
+            arbitrum: limits_arbitrum
+        }[hre.network.name] as typeof limits_arbitrum,
     }
 
     async function deployOptionStrategy(params: typeof _params) {
 
         const priceProvider = await get("PriceProvider" + params.currency)
-        const pricerName = `PriceCalculator_STRADDLE_${params.currency}`
-        const strategyName = `HegicStrategy_STRADDLE_${params.currency}`
-        const contract = "HegicStrategyStraddle"
+        const pricerName = `PriceCalculator_STRIP_${params.currency}`
+        const strategyName = `HegicStrategy_STRIP_${params.currency}`
+        const contract = "HegicStrategyStrip"
         const spotDecimals = { ETH: 18, BTC: 8 }[params.currency]
 
         const putPricer = `PriceCalculator_PUT_100_${params.currency}`
@@ -32,7 +36,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
           contract: "CombinePriceCalculator",
           from: deployer,
           log: true,
-          args: [pricers, [1e5, 1e5]],
+          args: [pricers, [2e5, 1e5]],
         })
         
         await deploy(strategyName, {
@@ -45,7 +49,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
             args: [
                 priceProvider.address,
                 pricer.address,
-                params.limit,
+                params.limits?.[strategyName as keyof typeof limits_arbitrum] ?? params.default_limit,
                 spotDecimals
             ]
         })
@@ -56,6 +60,6 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
 
 }
 
-deployment.tags = ["test", "strategies", "strategy-straddle"]
+deployment.tags = ["test", "strategies", "strategy-strip", "arbitrum"]
 deployment.dependencies = ["profit-calculator"]
 export default deployment

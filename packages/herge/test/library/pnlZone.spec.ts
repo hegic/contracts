@@ -33,4 +33,32 @@ describe("Pnl Zones", () => {
       pospnl,
     )
   })
+
+  it("ETH OTM CALL 10%", () => {
+    const strategy = "HegicStrategy_CALL_110_ETH"
+    const amount = BigNumber.from("1000000000000000000")
+    const price_0 = BigNumber.from("100000000000")
+    const pospnl = parseUnits("100", 6)
+    const {left, center, right} = calculatePNLZone(
+      strategy,
+      amount,
+      price_0,
+      pospnl,
+    )
+    // console.log((right?.value)?.toString())
+  })
+
+  it("ETH OTM PUT 10%", () => {
+    const strategy = "HegicStrategy_PUT_90_ETH"
+    const amount = BigNumber.from("1000000000000000000")
+    const price_0 = BigNumber.from("100000000000")
+    const pospnl = parseUnits("100", 6)
+    const {left, center, right} = calculatePNLZone(
+      strategy,
+      amount,
+      price_0,
+      pospnl,
+    )
+    // console.log((left?.value)?.toString())
+  })
 })

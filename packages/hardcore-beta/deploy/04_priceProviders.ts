@@ -1,8 +1,6 @@
 import {HardhatRuntimeEnvironment} from "hardhat/types"
 import  PriceProviderAbi from "@chainlink/contracts/abi/v0.8/AggregatorV3Interface.json"
 
-
-
 const params = {
   BTCPrice: 29398e8,
   ETHPrice: 1974e8,

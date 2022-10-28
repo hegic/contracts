@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { parseUnits } from "ethers/lib/utils"
+import limits_arbitrum from "./.limits.json"
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
@@ -8,36 +9,36 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
     const ProfitCalculatorLib = await get("ProfitCalculator")
 
     const _params = {
+        scale: 0,
         currency: "",
-        limit: parseUnits("10000", 6),
-        priceCoefficients: [6e4, -6e4],
-        percent: 0
+        default_limit: parseUnits("10000", 6),
+        limits:{
+            arbitrum: limits_arbitrum
+        }[hre.network.name] as typeof limits_arbitrum,
     }
 
     async function deployOptionStrategy(params: typeof _params) {
 
         const priceProvider = await get("PriceProvider" + params.currency)
-        const contract = "HegicStrategyInverseBullPutSpread"
-        const pricerName = `PriceCalculator_INVERSE_BULL_PUT_SPREAD_${params.percent}_${params.currency}`
-        const strategyName = `HegicStrategy_INVERSE_BULL_PUT_SPREAD_${params.percent}_${params.currency}`
+        const pricerName = `PriceCalculator_SPREAD_PUT_${params.scale}_${params.currency}`
+        const strategyName = `HegicStrategy_SPREAD_PUT_${params.scale}_${params.currency}`
+        const contract = "HegicStrategySpreadPut"
         const spotDecimals = { ETH: 18, BTC: 8 }[params.currency]
-    
+
+        const otmPricer = `PriceCalculator_PUT_${100 - params.scale}_${params.currency}`
         const atmPricer = `PriceCalculator_PUT_100_${params.currency}`
-        const otmPricer = `PriceCalculator_PUT_${100 - params.percent}_${params.currency}`
-    
+
         const pricers = [
-          (await get(atmPricer)).address,
-          (await get(otmPricer)).address,
+            (await get(otmPricer)).address,
+            (await get(atmPricer)).address,
         ]
-    
-        const pricer = await get(pricerName).catch(() =>
-          deploy(pricerName, {
+
+        const pricer = await deploy(pricerName, {
             contract: "CombinePriceCalculator",
             from: deployer,
             log: true,
-            args: [pricers, _params.priceCoefficients],
-          }),
-        )
+            args: [pricers, [-8e4, 1e5]],
+        })
 
         await deploy(strategyName, {
             contract,
@@ -49,19 +50,19 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
             args: [
                 priceProvider.address,
                 pricer.address,
-                params.limit,
+                params.limits?.[strategyName as keyof typeof limits_arbitrum] ?? params.default_limit,
                 spotDecimals,
-                100 - params.percent
+                params.scale * 100
             ]
         })
     }
 
-    for (const percent of [10, 20, 30])
+    for (const scale of [10, 20, 30])
         for (const currency of ["ETH", "BTC"])
-            await deployOptionStrategy({ ..._params, currency, percent })
+            await deployOptionStrategy({ ..._params, currency, scale })
 
 }
 
-deployment.tags = ["test", "strategies", "strategy-bull-put-spread"]
-deployment.dependencies = ["profit-calculator", "strategy-put-call"]
+deployment.tags = ["test", "strategies", "strategy-strap", "arbitrum"]
+deployment.dependencies = ["profit-calculator"]
 export default deployment

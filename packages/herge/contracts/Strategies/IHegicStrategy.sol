@@ -51,6 +51,11 @@ interface IHegicStrategy {
         address recipient
     ) external view returns (bool);
 
+    function getAvailableContracts(uint32 period, bytes[] calldata additional)
+        external
+        view
+        returns (uint256 available);
+
     function payOffAmount(uint256 optionID)
         external
         view

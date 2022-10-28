@@ -45,7 +45,10 @@ abstract contract ScaledStrikePriceCalculator is BasePriceCalculator {
         roundedDecimals = _roundedDecimal;
     }
 
-    function setPriceCorrectionRate(uint256 value) external onlyOwner {
+    function setPriceCorrectionRate(uint256 value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         priceCorrectionRate = value;
     }
 

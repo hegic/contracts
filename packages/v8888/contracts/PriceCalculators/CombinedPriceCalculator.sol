@@ -37,7 +37,10 @@ contract CombinePriceCalculator is BasePriceCalculator {
         coeficients = _coeficients;
     }
 
-    function setCoefficients(int256[2] memory c) external onlyOwner {
+    function setCoefficients(int256[2] memory c)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         coeficients = c;
     }
 

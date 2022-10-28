@@ -1,7 +1,7 @@
 import {HardhatRuntimeEnvironment} from "hardhat/types"
 
 async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
-  const {deployments, getNamedAccounts, network, getUnnamedAccounts} = hre
+  const {deployments, getNamedAccounts} = hre
   const {deploy, get} = deployments
   const {deployer} = await getNamedAccounts()
 

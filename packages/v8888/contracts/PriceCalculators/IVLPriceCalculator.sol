@@ -59,7 +59,10 @@ contract IVLPriceCalculator is ScaledStrikePriceCalculator, IPriceCalculator {
      * while balancing the asset's implied volatility rate.
      * @param value New IVRate value
      **/
-    function setImpliedVolRate(uint256 value) external onlyOwner {
+    function setImpliedVolRate(uint256 value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         impliedVolRate = value;
         emit SetImpliedVolRate(value);
     }
@@ -69,7 +72,10 @@ contract IVLPriceCalculator is ScaledStrikePriceCalculator, IPriceCalculator {
      * while balancing the asset's implied volatility rate.
      * @param value New settlementFeeShare value
      **/
-    function setSettlementFeeShare(uint256 value) external onlyOwner {
+    function setSettlementFeeShare(uint256 value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(value <= 100, "The value is too large");
         settlementFeeShare = value;
         emit SetSettlementFeeShare(value);

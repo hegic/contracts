@@ -66,7 +66,8 @@ export default {
       default: 0,
     },
     payoffPool: {
-      default: 9
+      default: 9,
+      arbitrum: 1,
     }
   },
   mocha: {

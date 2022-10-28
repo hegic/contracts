@@ -62,7 +62,8 @@ export function calculatePNLZone(
     }
 
     case "PUT": {
-      const STRIKE_PUT = price_0 //.sub(
+      const STRIKE_PUT = price_0.mul(stratInfo.strike).div(100)
+      //.sub(
       //   price_0.mul(stratInfo.strike || 0).div(100),
       // )
       const [value] = calculateBreakEven(
@@ -92,7 +93,7 @@ export function calculatePNLZone(
       }
     }
     case "CALL": {
-      const STRIKE_CALL = price_0
+      const STRIKE_CALL = price_0.mul(stratInfo.strike).div(100)
       const [value] = calculateBreakEven(
         strategy,
         amount,

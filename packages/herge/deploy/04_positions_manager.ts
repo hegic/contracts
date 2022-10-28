@@ -1,7 +1,7 @@
 import {HardhatRuntimeEnvironment} from "hardhat/types"
 
 async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
-  const {deployments, getNamedAccounts, network, getUnnamedAccounts} = hre
+  const {deployments, getNamedAccounts} = hre
   const {deploy} = deployments
   const {deployer} = await getNamedAccounts()
 
@@ -11,5 +11,5 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
   })
 }
 
-deployment.tags = ["test", "positions-manager"]
+deployment.tags = ["test", "positions-manager", "arbitrum"]
 export default deployment

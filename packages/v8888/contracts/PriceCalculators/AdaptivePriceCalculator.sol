@@ -87,7 +87,10 @@ contract AdaptivePriceCalculator is IVLPriceCalculator {
         return amount;
     }
 
-    function setUtilizationRate(uint256 value) external onlyOwner {
+    function setUtilizationRate(uint256 value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         utilizationRate = value;
     }
 }

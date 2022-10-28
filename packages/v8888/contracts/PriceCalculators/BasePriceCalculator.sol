@@ -21,7 +21,7 @@ pragma solidity ^0.8.3;
 
 import "../Interfaces/IPremiumCalculator.sol";
 import "@hegic/utils/contracts/Math.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @author 0mllwntrmt3
@@ -29,7 +29,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @notice The contract that calculates the options prices (the premiums)
  **/
 
-abstract contract BasePriceCalculator is IPremiumCalculator, Ownable {
+abstract contract BasePriceCalculator is IPremiumCalculator, AccessControl {
     using HegicMath for uint256;
 
     uint256 public minPeriod = 7 days;
@@ -38,9 +38,13 @@ abstract contract BasePriceCalculator is IPremiumCalculator, Ownable {
 
     constructor(AggregatorV3Interface _priceProvider) {
         priceProvider = _priceProvider;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function setPeriodLimits(uint256 min, uint256 max) external onlyOwner {
+    function setPeriodLimits(uint256 min, uint256 max)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(
             min >= 1 days && max <= 90 days,
             "PriceCalculator: Period limits are wrong"

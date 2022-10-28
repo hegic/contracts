@@ -25,9 +25,6 @@ describe("PriceCalculator", async () => {
     WETH = (await ethers.getContract("WETH")) as WethMock
 
     hegicPoolWETH = (await ethers.getContract("HegicWETHCALL")) as HegicPool
-    //
-    // const SELLER_ROLE = await hegicPoolWETH.SELLER_ROLE()
-    // hegicPoolWETH.grantRole(SELLER_ROLE, await alice.getAddress())
 
     fakePriceProvider = (await ethers.getContract(
       "ETHPriceProvider",
@@ -67,7 +64,11 @@ describe("PriceCalculator", async () => {
     it("should revert if the caller is not the owner", async () => {
       await expect(
         priceCalculator.connect(alice).setImpliedVolRate(BN.from(22000)),
-      ).to.be.revertedWith("caller is not the owner")
+      ).to.be.revertedWith(
+        `AccessControl: account ${(
+          await alice.getAddress()
+        ).toLowerCase()} is missing role 0x0000000000000000000000000000000000000000000000000000000000000000`,
+      )
     })
 
     it("should set the impliedVolRate correctly", async () => {

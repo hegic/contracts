@@ -1,9 +1,8 @@
 import {HardhatRuntimeEnvironment} from "hardhat/types"
-import { ProfitCalculator } from "../typechain"
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
   const {deployments, getNamedAccounts} = hre
-  const {deploy, get, execute} = deployments
+  const {deploy} = deployments
   const {deployer} = await getNamedAccounts()
 
   await deploy("ProfitCalculator",{
@@ -13,5 +12,5 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
 
 }
 
-deployment.tags = ["test", "profit-calculator"]
+deployment.tags = ["test", "profit-calculator", "arbitrum"]
 export default deployment

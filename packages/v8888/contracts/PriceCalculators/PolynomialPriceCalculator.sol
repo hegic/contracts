@@ -51,7 +51,10 @@ contract PolynomialPriceCalculator is BasePriceCalculator {
      * @notice Used for adjusting the options prices (the premiums)
      * @param values [i] New setCoefficients value
      **/
-    function setCoefficients(int256[5] calldata values) external onlyOwner {
+    function setCoefficients(int256[5] calldata values)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         coefficients = values;
         emit SetCoefficients(values);
     }

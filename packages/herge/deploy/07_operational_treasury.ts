@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { parseUnits } from "ethers/lib/utils"
 
 async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
-  const { deployments, getNamedAccounts, network, getUnnamedAccounts } = hre
+  const { deployments, getNamedAccounts } = hre
   const { deploy, get } = deployments
   const { deployer } = await getNamedAccounts()
 
@@ -11,7 +11,7 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
     manager: (await get("PositionsManager")).address,
     maxLockupPeriod: 90 * 24 * 3600, // 90 days
     coverPool: (await get("CoverPool")).address,
-    benchmark: parseUnits("300000", 6),
+    benchmark: parseUnits("10000", 6),
     strategies: await Promise.all([
       "HegicStrategy_PUT_100_ETH",
       "HegicStrategy_PUT_90_ETH",
@@ -92,7 +92,7 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
   })
 }
 
-deployment.tags = ["test", "operational-treasury"]
+deployment.tags = ["test", "operational-treasury", "arbitrum"]
 deployment.dependencies = [
   "strategies"
 ]

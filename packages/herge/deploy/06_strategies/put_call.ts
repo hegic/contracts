@@ -1,15 +1,20 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { parseUnits } from "ethers/lib/utils"
-import prices from "./.deploy_prices.json"
+import prices_test from "./.deploy_prices.json"
+import prices_arbitrum from "./.deploy_prices_arbitrum.json"
+import limits_arbitrum from "./.limits.json"
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre
-  const { deploy, get } = deployments
+  const { deploy, get, execute } = deployments
   const { deployer } = await getNamedAccounts()
   const ProfitCalculatorLib = await get("ProfitCalculator")
 
   const _params = {
-    limit: parseUnits("10000", 6),
+    default_limit: parseUnits("10000", 6),
+    limits:{
+        arbitrum: limits_arbitrum
+    } as {[key:string]:typeof limits_arbitrum},
     currency: "",
     type: "",
     priceScale: 0,
@@ -25,6 +30,10 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
     const contract = params.type == "PUT" ? "HegicStrategyPut" : "HegicStrategyCall"
     const spotDecimals = {ETH:18, BTC:8}[params.currency]
 
+    const prices = {
+      arbitrum: prices_arbitrum
+    }[hre.network.name] || prices_test
+
     const pricer = await deploy(
       pricerName,
       {
@@ -38,7 +47,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
         ],
       },
     )
-
+    
     await deploy(strategyName, {
       contract,
       from: deployer,
@@ -49,7 +58,7 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
       args: [
         priceProvider.address,
         pricer.address,
-        params.limit,
+        params.limits?.[strategyName as keyof typeof limits_arbitrum] ?? params.default_limit,
         spotDecimals,
         priceScale * 100,
       ]
@@ -63,6 +72,6 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
       }
 }
 
-deployment.tags = ["test", "strategies", "strategy-put-call"]
+deployment.tags = ["test", "strategies", "strategy-put-call", "arbitrum"]
 deployment.dependencies = ["profit-calculator"]
 export default deployment

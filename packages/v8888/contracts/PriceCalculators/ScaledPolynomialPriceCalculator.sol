@@ -52,7 +52,10 @@ contract ScaledPolynomialPriceCalculator is ScaledStrikePriceCalculator {
      * @notice Used for adjusting the options prices (the premiums)
      * @param values [i] New setDiscount value
      **/
-    function setDiscount(int256[5] calldata values) external onlyOwner {
+    function setDiscount(int256[5] calldata values)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         discount = values;
         emit SetDiscount(values);
     }

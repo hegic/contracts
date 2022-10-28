@@ -177,6 +177,7 @@ abstract contract HegicStrategy is
     function getAvailableContracts(uint32 period, bytes[] calldata additional)
         external
         view
+        override
         returns (uint256 available)
     {
         uint256 totalAvailableBalance = pool.coverPool().availableForPayment() +
