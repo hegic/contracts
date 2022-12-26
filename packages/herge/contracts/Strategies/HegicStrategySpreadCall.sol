@@ -31,8 +31,21 @@ contract HegicStrategySpreadCall is HegicStrategy {
         IPremiumCalculator _pricer,
         uint256 _limit,
         uint8 _spotDecimals,
-        uint16 _priceScale
-    ) HegicStrategy(_priceProvider, _pricer, _limit, _spotDecimals) {
+        uint16 _priceScale,
+        uint48[2] memory periodLimits,
+        uint48 _exerciseWindowDuration,
+        LimitController _limitController
+    )
+        HegicStrategy(
+            _priceProvider,
+            _pricer,
+            _limit,
+            _spotDecimals,
+            periodLimits,
+            _exerciseWindowDuration,
+            _limitController
+        )
+    {
         PRICE_SCALE_NUMERATOR = _priceScale;
     }
 

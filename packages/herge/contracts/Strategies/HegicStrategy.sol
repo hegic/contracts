@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../IOperationalTreasury.sol";
 import "./IHegicStrategy.sol";
+import "./LimitController.sol";
 
 import "@hegic/v8888/contracts/Interfaces/IPremiumCalculator.sol";
 
@@ -37,26 +38,41 @@ abstract contract HegicStrategy is
 
     IOperationalTreasury public pool;
     AggregatorV3Interface public immutable priceProvider;
+    LimitController public limitController;
     uint256 public override lockedLimit;
     IPremiumCalculator public pricer;
     uint256 internal immutable spotDecimals; // 1e18 for ETH | 1e8 for BTC
-    uint256 internal constant TOKEN_DECIMALS = 1e6;
-    uint256 private constant K_DECIMALS = 100;
-    uint256 public k = 100;
+
+    uint32 internal constant TOKEN_DECIMALS = 1e6;
+    uint32 private constant K_DECIMALS = 100;
+    uint48 public k = 100;
+    uint48 public minPeriod;
+    uint48 public maxPeriod;
+    uint48 public immutable exerciseWindowDuration;
 
     mapping(uint256 => StrategyData) public override strategyData;
+    mapping(uint256 => uint32) public override positionExpiration;
 
     constructor(
         AggregatorV3Interface _priceProvider,
         IPremiumCalculator _pricer,
         uint256 limit,
-        uint8 _spotDecimals
+        uint8 _spotDecimals,
+        uint48[2] memory periodLimits,
+        uint48 _exerciseWindowDuration,
+        LimitController _limitController
     ) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         pricer = _pricer;
         priceProvider = _priceProvider;
         lockedLimit = limit;
         spotDecimals = 10**_spotDecimals;
+        minPeriod = periodLimits[0];
+        maxPeriod = periodLimits[1];
+        exerciseWindowDuration = _exerciseWindowDuration == 0
+            ? type(uint48).max
+            : _exerciseWindowDuration;
+        limitController = _limitController;
     }
 
     function create(
@@ -88,7 +104,8 @@ abstract contract HegicStrategy is
         );
 
         require(
-            pool.lockedByStrategy(this) + negativePNL <= lockedLimit,
+            pool.lockedByStrategy(this) + negativePNL <= lockedLimit &&
+                pool.totalLocked() + negativePNL <= limitController.limit(),
             "HegicStrategy: The limit is exceeded"
         );
 
@@ -112,23 +129,30 @@ abstract contract HegicStrategy is
         internal
         virtual
         returns (
-            uint32 expiration,
+            uint32 lockDuration,
             uint256 negativePNL,
             uint256 positivePNL
         )
     {
+        require(minPeriod <= period && period <= maxPeriod, "Period is wrong");
         (negativePNL, positivePNL) = calculateNegativepnlAndPositivepnl(
             amount,
             period,
             additional
         );
-        expiration = uint32(block.timestamp + period);
+        lockDuration = uint32(block.timestamp + period);
+        positionExpiration[id] = lockDuration;
         uint256 strike = _currentPrice();
         strategyData[id] = StrategyData(uint128(amount), uint128(strike));
     }
 
     function connect() external override {
         IOperationalTreasury _pool = IOperationalTreasury(msg.sender);
+        address limitPool = address(limitController.operationalTreasury());
+        require(
+            limitPool == address(0) || limitPool == msg.sender,
+            "OperationalTreasury only"
+        );
         require(address(pool) == address(0), "The strategy was inited");
         pool = _pool;
     }
@@ -167,8 +191,15 @@ abstract contract HegicStrategy is
      * @notice Used for setting the collateralization coefficient
      * @param value The collateralization coefficient
      **/
-    function setK(uint256 value) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setK(uint48 value) external onlyRole(DEFAULT_ADMIN_ROLE) {
         k = value;
+    }
+
+    function setLimitController(LimitController value)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        limitController = value;
     }
 
     /**
@@ -180,20 +211,44 @@ abstract contract HegicStrategy is
         override
         returns (uint256 available)
     {
-        uint256 totalAvailableBalance = pool.coverPool().availableForPayment() +
-            pool.totalBalance() -
-            pool.totalLocked() -
-            pool.lockedPremium();
-        uint256 availableBalance = lockedLimit - pool.lockedByStrategy(this);
+        uint256 limit;
+        uint256 operationalLocked = pool.totalLocked();
+
+        {
+            uint256 coverBalance = pool.coverPool().availableForPayment();
+            uint256 operationalTotal = pool.totalBalance();
+            uint256 operationalPremium = pool.lockedPremium();
+            if (
+                coverBalance + operationalTotal <
+                operationalLocked + operationalPremium
+            ) {
+                return 0;
+            }
+            limit =
+                coverBalance +
+                operationalTotal -
+                operationalLocked -
+                operationalPremium;
+        }
+        {
+            uint256 lockedByStrategy = pool.lockedByStrategy(this);
+            if (lockedLimit < lockedByStrategy) return 0;
+            if (limit > lockedLimit - lockedByStrategy)
+                limit = lockedLimit - lockedByStrategy;
+        }
+        {
+            uint256 totalLimitation = limitController.limit();
+            if (totalLimitation < operationalLocked) return 0;
+            if (limit > totalLimitation - operationalLocked)
+                limit = totalLimitation - operationalLocked;
+        }
         (uint256 lockedAmount, ) = calculateNegativepnlAndPositivepnl(
             spotDecimals,
             period,
             additional
         );
-        if (availableBalance > totalAvailableBalance) {
-            return (totalAvailableBalance * spotDecimals) / lockedAmount;
-        }
-        return (availableBalance * spotDecimals) / lockedAmount;
+
+        return (limit * spotDecimals) / lockedAmount;
     }
 
     /**
@@ -201,13 +256,23 @@ abstract contract HegicStrategy is
      **/
 
     function isPayoffAvailable(
-        uint256 optionID,
+        uint256 positionID,
         address caller,
         address /*recipient*/
     ) external view virtual override returns (bool) {
         return
-            pool.manager().isApprovedOrOwner(caller, optionID) &&
-            _calculateStrategyPayOff(optionID) > 0;
+            pool.manager().isApprovedOrOwner(caller, positionID) &&
+            _calculateStrategyPayOff(positionID) > 0 &&
+            positionExpiration[positionID] <
+            block.timestamp + exerciseWindowDuration;
+    }
+
+    function setPeriodLimits(uint48[2] calldata periodLimits)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        minPeriod = periodLimits[0];
+        maxPeriod = periodLimits[1];
     }
 
     function _calculateCollateral(uint256 amount, uint256 period)

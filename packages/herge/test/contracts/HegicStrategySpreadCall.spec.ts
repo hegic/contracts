@@ -30,7 +30,7 @@ describe("HegicStrategySpreadCall", () => {
 
     await PriceProviderETH.setPrice(atmEthStrike)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_SPREAD_CALL_10_ETH.address,
+      strategies.HegicStrategy_SPREAD_CALL_10_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -39,7 +39,7 @@ describe("HegicStrategySpreadCall", () => {
 
     await PriceProviderBTC.setPrice(atmBtcStrike)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_SPREAD_CALL_10_BTC.address,
+      strategies.HegicStrategy_SPREAD_CALL_10_BTC_1.address,
       alice.address,
       btcAmount,
       period,

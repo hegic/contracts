@@ -2,14 +2,18 @@ import {HardhatRuntimeEnvironment} from "hardhat/types"
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
   const {deployments, getNamedAccounts} = hre
-  const {deploy} = deployments
+  const {deploy, execute} = deployments
   const {deployer} = await getNamedAccounts()
 
-  await deploy("ProfitCalculator",{
+  await deploy("ProfitCalculator", {
     from: deployer,
-    log:true
+    log: true,
   })
 
+  await deploy("LimitController", {
+    from: deployer,
+    log: true,
+  })
 }
 
 deployment.tags = ["test", "profit-calculator", "arbitrum"]

@@ -18,16 +18,30 @@ describe("HegicStrategyPut", () => {
     await initializePools(testData)
     const {
       OperationalTreasury,
-      signers: [, alice],
+      signers: [deployer, alice],
       USDC,
       strategies,
       PriceProviderETH,
       PriceProviderBTC,
     } = testData
 
+    const limit = parseUnits("10000000", 6)
+    await strategies.HegicStrategy_PUT_100_ETH_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_PUT_90_ETH_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_PUT_100_BTC_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_PUT_90_BTC_1.connect(deployer).setLimit(
+      limit,
+    )
+
     await PriceProviderETH.setPrice(ethSpotPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_PUT_100_ETH.address,
+      strategies.HegicStrategy_PUT_100_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -35,7 +49,7 @@ describe("HegicStrategyPut", () => {
     )
 
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_PUT_90_ETH.address,
+      strategies.HegicStrategy_PUT_90_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -44,7 +58,7 @@ describe("HegicStrategyPut", () => {
 
     await PriceProviderBTC.setPrice(btcSpotPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_PUT_100_BTC.address,
+      strategies.HegicStrategy_PUT_100_BTC_1.address,
       alice.address,
       btcAmount,
       period,
@@ -52,7 +66,7 @@ describe("HegicStrategyPut", () => {
     )
 
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_PUT_90_BTC.address,
+      strategies.HegicStrategy_PUT_90_BTC_1.address,
       alice.address,
       btcAmount,
       period,

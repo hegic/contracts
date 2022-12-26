@@ -27,7 +27,7 @@ describe("HegicStrategyStrap.spec", () => {
 
     await PriceProviderETH.setPrice(atmEthStrike)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_STRAP_ETH.address,
+      strategies.HegicStrategy_STRAP_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -36,7 +36,7 @@ describe("HegicStrategyStrap.spec", () => {
 
     await PriceProviderBTC.setPrice(atmBtcStrike)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_STRAP_BTC.address,
+      strategies.HegicStrategy_STRAP_BTC_1.address,
       alice.address,
       btcAmount,
       period,

@@ -13,7 +13,7 @@ const DEFAULT_ADMIN_ROLE =
   "0x0000000000000000000000000000000000000000000000000000000000000000"
 const OPTInitialBalance = parseUnits("100000", 6)
 
-describe("Operational Pool", () => {
+describe("Operational Treasury", () => {
   let testData: Fixture
   const ethAmount = parseUnits("1")
   const btcAmount = parseUnits("1", 8)
@@ -79,7 +79,7 @@ describe("Operational Pool", () => {
     await PriceProviderBTC.setPrice(btcSpotPrice)
     await PriceProviderETH.setPrice(ethSpotPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_PUT_100_ETH.address,
+      strategies.HegicStrategy_PUT_100_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -96,6 +96,7 @@ describe("Operational Pool", () => {
         pricers: {PriceCalculator_CALL_100_ETH},
         signers: [deployer, alice, ,],
         USDC,
+        LimitController,
       } = testData
 
       const newEthOtmCall = await ethers
@@ -113,6 +114,9 @@ describe("Operational Pool", () => {
             ethers.constants.MaxUint256,
             18,
             10500,
+            [0, 2 ** 47],
+            0,
+            LimitController.address,
           ),
         )
       await OperationalTreasury.connect(deployer).addStrategy(
@@ -156,7 +160,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_100_ETH.address,
+            strategies.HegicStrategy_CALL_100_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -181,7 +185,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_100_ETH.address,
+            strategies.HegicStrategy_PUT_100_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -206,7 +210,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_110_ETH.address,
+            strategies.HegicStrategy_CALL_110_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -231,7 +235,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_120_ETH.address,
+            strategies.HegicStrategy_CALL_120_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -256,7 +260,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_130_ETH.address,
+            strategies.HegicStrategy_CALL_130_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -281,7 +285,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_90_ETH.address,
+            strategies.HegicStrategy_PUT_90_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -306,7 +310,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_80_ETH.address,
+            strategies.HegicStrategy_PUT_80_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -331,7 +335,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_70_ETH.address,
+            strategies.HegicStrategy_PUT_70_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -356,7 +360,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRADDLE_ETH.address,
+            strategies.HegicStrategy_STRADDLE_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -381,7 +385,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_10_ETH.address,
+            strategies.HegicStrategy_STRANGLE_10_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -406,7 +410,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_20_ETH.address,
+            strategies.HegicStrategy_STRANGLE_20_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -431,7 +435,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_30_ETH.address,
+            strategies.HegicStrategy_STRANGLE_30_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -456,7 +460,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_10_ETH.address,
+            strategies.HegicStrategy_SPREAD_CALL_10_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -481,7 +485,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_20_ETH.address,
+            strategies.HegicStrategy_SPREAD_CALL_20_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -506,7 +510,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_30_ETH.address,
+            strategies.HegicStrategy_SPREAD_CALL_30_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -531,7 +535,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_10_ETH.address,
+            strategies.HegicStrategy_SPREAD_PUT_10_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -556,7 +560,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_20_ETH.address,
+            strategies.HegicStrategy_SPREAD_PUT_20_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -581,7 +585,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_30_ETH.address,
+            strategies.HegicStrategy_SPREAD_PUT_30_ETH_1.address,
             alice.address,
             ethAmount,
             period,
@@ -894,7 +898,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_100_BTC.address,
+            strategies.HegicStrategy_CALL_100_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -919,7 +923,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_100_BTC.address,
+            strategies.HegicStrategy_PUT_100_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -944,7 +948,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_110_BTC.address,
+            strategies.HegicStrategy_CALL_110_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -969,7 +973,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_120_BTC.address,
+            strategies.HegicStrategy_CALL_120_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -994,7 +998,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_CALL_130_BTC.address,
+            strategies.HegicStrategy_CALL_130_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1019,7 +1023,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_90_BTC.address,
+            strategies.HegicStrategy_PUT_90_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1044,7 +1048,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_80_BTC.address,
+            strategies.HegicStrategy_PUT_80_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1069,7 +1073,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_PUT_70_BTC.address,
+            strategies.HegicStrategy_PUT_70_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1086,15 +1090,20 @@ describe("Operational Pool", () => {
         const {
           OperationalTreasury,
           strategies,
-          signers: [, alice, ,],
+          signers: [deployer, alice, ,],
           USDC,
         } = testData
+
+        const limit = parseUnits("1000000", 6)
+        await strategies.HegicStrategy_STRADDLE_BTC_1.connect(
+          deployer,
+        ).setLimit(limit)
 
         const optionCost = parseUnits("1795.443402", 6)
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRADDLE_BTC.address,
+            strategies.HegicStrategy_STRADDLE_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1119,7 +1128,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_10_BTC.address,
+            strategies.HegicStrategy_STRANGLE_10_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1144,7 +1153,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_20_BTC.address,
+            strategies.HegicStrategy_STRANGLE_20_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1169,7 +1178,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_STRANGLE_30_BTC.address,
+            strategies.HegicStrategy_STRANGLE_30_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1194,7 +1203,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_10_BTC.address,
+            strategies.HegicStrategy_SPREAD_CALL_10_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1219,7 +1228,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_20_BTC.address,
+            strategies.HegicStrategy_SPREAD_CALL_20_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1244,7 +1253,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_CALL_30_BTC.address,
+            strategies.HegicStrategy_SPREAD_CALL_30_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1269,7 +1278,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_10_BTC.address,
+            strategies.HegicStrategy_SPREAD_PUT_10_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1294,7 +1303,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_20_BTC.address,
+            strategies.HegicStrategy_SPREAD_PUT_20_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1319,7 +1328,7 @@ describe("Operational Pool", () => {
 
         await expect(() =>
           OperationalTreasury.connect(alice).buy(
-            strategies.HegicStrategy_SPREAD_PUT_30_BTC.address,
+            strategies.HegicStrategy_SPREAD_PUT_30_BTC_1.address,
             alice.address,
             btcAmount,
             period,
@@ -1620,7 +1629,7 @@ describe("Operational Pool", () => {
       )
       expect(
         await OperationalTreasury.lockedByStrategy(
-          strategies.HegicStrategy_PUT_100_ETH.address,
+          strategies.HegicStrategy_PUT_100_ETH_1.address,
         ),
       ).to.be.eq(OptionCost)
     })
@@ -1652,7 +1661,9 @@ describe("Operational Pool", () => {
       const expectedProfit = 200e6
 
       await PriceProviderETH.setPrice(exercisePrice)
-      const profit = await strategies.HegicStrategy_PUT_100_ETH.payOffAmount(0)
+      const profit = await strategies.HegicStrategy_PUT_100_ETH_1.payOffAmount(
+        0,
+      )
 
       expect(profit).to.be.eq(expectedProfit)
 

@@ -32,7 +32,7 @@ describe("HegicStrategyStrangle.spec", () => {
 
     await PriceProviderETH.setPrice(spotEthPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_STRANGLE_10_ETH.address,
+      strategies.HegicStrategy_STRANGLE_10_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -41,7 +41,7 @@ describe("HegicStrategyStrangle.spec", () => {
 
     await PriceProviderBTC.setPrice(spotBtcPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_STRANGLE_10_BTC.address,
+      strategies.HegicStrategy_STRANGLE_10_BTC_1.address,
       alice.address,
       btcAmount,
       period,

@@ -18,15 +18,29 @@ describe("HegicStrategyCall", () => {
     await initializePools(testData)
     const {
       OperationalTreasury,
-      signers: [, alice],
+      signers: [deployer, alice],
       strategies,
       PriceProviderETH,
       PriceProviderBTC,
     } = testData
 
+    const limit = parseUnits("10000000", 6)
+    await strategies.HegicStrategy_CALL_100_ETH_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_CALL_110_ETH_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_CALL_100_BTC_1.connect(deployer).setLimit(
+      limit,
+    )
+    await strategies.HegicStrategy_CALL_110_BTC_1.connect(deployer).setLimit(
+      limit,
+    )
+
     await PriceProviderETH.setPrice(ethSpotPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_CALL_100_ETH.address,
+      strategies.HegicStrategy_CALL_100_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -34,7 +48,7 @@ describe("HegicStrategyCall", () => {
     )
 
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_CALL_110_ETH.address,
+      strategies.HegicStrategy_CALL_110_ETH_1.address,
       alice.address,
       ethAmount,
       period,
@@ -43,7 +57,7 @@ describe("HegicStrategyCall", () => {
 
     await PriceProviderBTC.setPrice(btcSpotPrice)
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_CALL_100_BTC.address,
+      strategies.HegicStrategy_CALL_100_BTC_1.address,
       alice.address,
       btcAmount,
       period,
@@ -51,12 +65,135 @@ describe("HegicStrategyCall", () => {
     )
 
     await OperationalTreasury.connect(alice).buy(
-      strategies.HegicStrategy_CALL_110_BTC.address,
+      strategies.HegicStrategy_CALL_110_BTC_1.address,
       alice.address,
       btcAmount,
       period,
       [],
     )
+  })
+
+  describe("Should correct calcualte Lockedliquidity for strategy with different period", async () => {
+    it("Should correct calcualte Lockedliquidity", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      const period1 = 86400 * 7
+      await OperationalTreasury.connect(alice).buy(
+        strategies.HegicStrategy_CALL_100_ETH_1.address,
+        alice.address,
+        parseUnits("1"),
+        period1,
+        [],
+      )
+      const lockedLiquidity1 = parseUnits("90.043457", 6)
+      expect(
+        (await OperationalTreasury.lockedLiquidity(4)).positivepnl,
+      ).to.be.eq(lockedLiquidity1)
+      expect(
+        await OperationalTreasury.lockedByStrategy(
+          strategies.HegicStrategy_CALL_100_ETH_1.address,
+        ),
+      ).to.be.eq(lockedLiquidity1.mul(3))
+
+      const period2 = 86400 * 25
+
+      await OperationalTreasury.connect(alice).buy(
+        strategies.HegicStrategy_CALL_100_ETH_2.address,
+        alice.address,
+        parseUnits("1"),
+        period2,
+        [],
+      )
+      const lockedLiquidity2 = parseUnits("139.908095", 6)
+      expect(
+        (await OperationalTreasury.lockedLiquidity(5)).positivepnl,
+      ).to.be.eq(lockedLiquidity2)
+      expect(
+        await OperationalTreasury.lockedByStrategy(
+          strategies.HegicStrategy_CALL_100_ETH_2.address,
+        ),
+      ).to.be.eq(lockedLiquidity2)
+
+      const period3 = 86400 * 35
+
+      await OperationalTreasury.connect(alice).buy(
+        strategies.HegicStrategy_CALL_100_ETH_3.address,
+        alice.address,
+        parseUnits("1"),
+        period3,
+        [],
+      )
+      const lockedLiquidity3 = parseUnits("172.648028", 6)
+      expect(
+        await OperationalTreasury.lockedByStrategy(
+          strategies.HegicStrategy_CALL_100_ETH_3.address,
+        ),
+      ).to.be.eq(lockedLiquidity3)
+      expect(
+        (await OperationalTreasury.lockedLiquidity(6)).positivepnl,
+      ).to.be.eq(lockedLiquidity3)
+    })
+
+    it("Should revert transcation HegicStrategy_CALL_100_ETH_1 when period is more than 14 days", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      const period = 86400 * 15
+      await expect(
+        OperationalTreasury.connect(alice).buy(
+          strategies.HegicStrategy_CALL_100_ETH_1.address,
+          alice.address,
+          parseUnits("1"),
+          period,
+          [],
+        ),
+      ).revertedWith("Period is wrong")
+    })
+
+    it("Should revert transcation HegicStrategy_CALL_100_ETH_2 when period is more than 30 days", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      const period = 86400 * 31
+      await expect(
+        OperationalTreasury.connect(alice).buy(
+          strategies.HegicStrategy_CALL_100_ETH_2.address,
+          alice.address,
+          parseUnits("1"),
+          period,
+          [],
+        ),
+      ).revertedWith("Period is wrong")
+    })
+
+    it("Should revert transcation HegicStrategy_CALL_100_ETH_3 when period is more thans 60 days", async () => {
+      const {
+        OperationalTreasury,
+        signers: [deployer, alice],
+        strategies,
+      } = testData
+
+      const period = 86400 * 61
+      await expect(
+        OperationalTreasury.connect(alice).buy(
+          strategies.HegicStrategy_CALL_100_ETH_3.address,
+          alice.address,
+          parseUnits("1"),
+          period,
+          [],
+        ),
+      ).revertedWith("Period is wrong")
+    })
   })
 
   describe("Limits and collaterezation", async () => {
@@ -67,9 +204,9 @@ describe("HegicStrategyCall", () => {
         strategies,
       } = testData
 
-      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setK(200)
+      await strategies.HegicStrategy_CALL_100_ETH_1.connect(deployer).setK(200)
       await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_CALL_100_ETH.address,
+        strategies.HegicStrategy_CALL_100_ETH_1.address,
         alice.address,
         parseUnits("1"),
         period,
@@ -92,9 +229,9 @@ describe("HegicStrategyCall", () => {
         strategies,
       } = testData
 
-      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setK(50)
+      await strategies.HegicStrategy_CALL_100_ETH_1.connect(deployer).setK(50)
       await OperationalTreasury.connect(alice).buy(
-        strategies.HegicStrategy_CALL_100_ETH.address,
+        strategies.HegicStrategy_CALL_100_ETH_1.address,
         alice.address,
         parseUnits("1"),
         period,
@@ -116,11 +253,11 @@ describe("HegicStrategyCall", () => {
         strategies,
       } = testData
       const newLimit = parseUnits("100", 6)
-      await strategies.HegicStrategy_CALL_100_ETH.connect(deployer).setLimit(
+      await strategies.HegicStrategy_CALL_100_ETH_1.connect(deployer).setLimit(
         newLimit,
       )
       expect(
-        await strategies.HegicStrategy_CALL_100_ETH.lockedLimit(),
+        await strategies.HegicStrategy_CALL_100_ETH_1.lockedLimit(),
       ).to.be.eq(newLimit)
     })
   })

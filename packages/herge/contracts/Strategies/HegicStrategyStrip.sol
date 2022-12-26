@@ -27,8 +27,21 @@ contract HegicStrategyStrip is HegicStrategy {
         AggregatorV3Interface _priceProvider,
         IPremiumCalculator _pricer,
         uint256 _limit,
-        uint8 _spotDecimals
-    ) HegicStrategy(_priceProvider, _pricer, _limit, _spotDecimals) {}
+        uint8 _spotDecimals,
+        uint48[2] memory periodLimits,
+        uint48 _exerciseWindowDuration,
+        LimitController _limitController
+    )
+        HegicStrategy(
+            _priceProvider,
+            _pricer,
+            _limit,
+            _spotDecimals,
+            periodLimits,
+            _exerciseWindowDuration,
+            _limitController
+        )
+    {}
 
     function _calculateStrategyPayOff(uint256 optionID)
         internal

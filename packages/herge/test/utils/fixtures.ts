@@ -5,28 +5,241 @@ import {
   OperationalTreasury,
   ProfitDistributor,
   PolynomialPriceCalculator,
+  LimitController,
 } from "../../typechain"
 import {CoverPool} from "../../typechain/CoverPool"
 import {Erc20Mock} from "../../typechain/Erc20Mock"
 import {HegicStrategy} from "../../typechain/HegicStrategy"
 
+type StrategyName = typeof availableStrategies[number]
+type PolynomialPricers = typeof availablePricers[number]
+
+export const fixture = deployments.createFixture<Fixture, string | string[]>(
+  async ({deployments}, tags = "test") => {
+    await deployments.fixture(tags)
+    return await getContracts()
+  },
+)
+
+export async function getContracts() {
+  const signers = await ethers.getSigners()
+
+  const rawStrategies = await Promise.all(
+    availableStrategies.map(async (strategyName) => [
+      strategyName,
+      (await ethers.getContract(strategyName)) as HegicStrategy,
+    ]),
+  )
+
+  const rawPricers = await Promise.all(
+    availablePricers.map(async (PolynomialPricers) => [
+      PolynomialPricers,
+      (await ethers.getContract(
+        PolynomialPricers,
+      )) as PolynomialPriceCalculator,
+    ]),
+  )
+
+  return {
+    signers,
+    USDC: (await ethers.getContract("USDC")) as Erc20Mock,
+    HEGIC: (await ethers.getContract("HEGIC")) as Erc20Mock,
+    CoverPool: (await ethers.getContract("CoverPool")) as CoverPool,
+    payoffPool: signers[9],
+    ProfitDistributor: (await ethers.getContract(
+      "ProfitDistributor",
+    )) as ProfitDistributor,
+    OperationalTreasury: (await ethers.getContract(
+      "OperationalTreasury",
+    )) as OperationalTreasury,
+    PositionsManager: (await ethers.getContract(
+      "PositionsManager",
+    )) as PositionsManager,
+    LimitController: (await ethers.getContract(
+      "LimitController",
+    )) as LimitController,
+    BasePriceCalculator_PUT_ETH: (await ethers.getContract(
+      "PriceCalculator_PUT_100_ETH",
+    )) as PolynomialPriceCalculator,
+    PriceProviderETH: (await ethers.getContract(
+      "PriceProviderETH",
+    )) as PriceProviderMock,
+    PriceProviderBTC: (await ethers.getContract(
+      "PriceProviderBTC",
+    )) as PriceProviderMock,
+    strategies: Object.fromEntries(rawStrategies) as {
+      [key in StrategyName]: HegicStrategy
+    },
+    pricers: Object.fromEntries(rawPricers) as {
+      [key in PolynomialPricers]: PolynomialPriceCalculator
+    },
+  }
+}
+
+export type Fixture = Awaited<ReturnType<typeof getContracts>>
+
 export const availableStrategies = [
-  "HegicStrategy_PUT_100_ETH",
-  "HegicStrategy_PUT_90_ETH",
-  "HegicStrategy_PUT_80_ETH",
-  "HegicStrategy_PUT_70_ETH",
-  "HegicStrategy_PUT_100_BTC",
-  "HegicStrategy_PUT_90_BTC",
-  "HegicStrategy_PUT_80_BTC",
-  "HegicStrategy_PUT_70_BTC",
-  "HegicStrategy_CALL_100_ETH",
-  "HegicStrategy_CALL_110_ETH",
-  "HegicStrategy_CALL_120_ETH",
-  "HegicStrategy_CALL_130_ETH",
-  "HegicStrategy_CALL_100_BTC",
-  "HegicStrategy_CALL_110_BTC",
-  "HegicStrategy_CALL_120_BTC",
-  "HegicStrategy_CALL_130_BTC",
+  "HegicStrategy_PUT_100_ETH_1",
+  "HegicStrategy_PUT_100_ETH_2",
+  "HegicStrategy_PUT_100_ETH_3",
+  "HegicStrategy_PUT_100_ETH_4",
+  "HegicStrategy_PUT_90_ETH_1",
+  "HegicStrategy_PUT_90_ETH_2",
+  "HegicStrategy_PUT_90_ETH_3",
+  "HegicStrategy_PUT_90_ETH_4",
+  "HegicStrategy_PUT_80_ETH_1",
+  "HegicStrategy_PUT_80_ETH_2",
+  "HegicStrategy_PUT_80_ETH_3",
+  "HegicStrategy_PUT_80_ETH_4",
+  "HegicStrategy_PUT_70_ETH_1",
+  "HegicStrategy_PUT_70_ETH_2",
+  "HegicStrategy_PUT_70_ETH_3",
+  "HegicStrategy_PUT_70_ETH_4",
+  "HegicStrategy_PUT_100_BTC_1",
+  "HegicStrategy_PUT_100_BTC_2",
+  "HegicStrategy_PUT_100_BTC_3",
+  "HegicStrategy_PUT_100_BTC_4",
+  "HegicStrategy_PUT_90_BTC_1",
+  "HegicStrategy_PUT_90_BTC_2",
+  "HegicStrategy_PUT_90_BTC_3",
+  "HegicStrategy_PUT_90_BTC_4",
+  "HegicStrategy_PUT_80_BTC_1",
+  "HegicStrategy_PUT_80_BTC_2",
+  "HegicStrategy_PUT_80_BTC_3",
+  "HegicStrategy_PUT_80_BTC_4",
+  "HegicStrategy_PUT_70_BTC_1",
+  "HegicStrategy_PUT_70_BTC_2",
+  "HegicStrategy_PUT_70_BTC_3",
+  "HegicStrategy_PUT_70_BTC_4",
+  "HegicStrategy_CALL_100_ETH_1",
+  "HegicStrategy_CALL_100_ETH_2",
+  "HegicStrategy_CALL_100_ETH_3",
+  "HegicStrategy_CALL_100_ETH_4",
+  "HegicStrategy_CALL_110_ETH_1",
+  "HegicStrategy_CALL_110_ETH_2",
+  "HegicStrategy_CALL_110_ETH_3",
+  "HegicStrategy_CALL_110_ETH_4",
+  "HegicStrategy_CALL_120_ETH_1",
+  "HegicStrategy_CALL_120_ETH_2",
+  "HegicStrategy_CALL_120_ETH_3",
+  "HegicStrategy_CALL_120_ETH_4",
+  "HegicStrategy_CALL_130_ETH_1",
+  "HegicStrategy_CALL_130_ETH_2",
+  "HegicStrategy_CALL_130_ETH_3",
+  "HegicStrategy_CALL_130_ETH_4",
+  "HegicStrategy_CALL_100_BTC_1",
+  "HegicStrategy_CALL_100_BTC_2",
+  "HegicStrategy_CALL_100_BTC_3",
+  "HegicStrategy_CALL_100_BTC_4",
+  "HegicStrategy_CALL_110_BTC_1",
+  "HegicStrategy_CALL_110_BTC_2",
+  "HegicStrategy_CALL_110_BTC_3",
+  "HegicStrategy_CALL_110_BTC_4",
+  "HegicStrategy_CALL_120_BTC_1",
+  "HegicStrategy_CALL_120_BTC_2",
+  "HegicStrategy_CALL_120_BTC_3",
+  "HegicStrategy_CALL_120_BTC_4",
+  "HegicStrategy_CALL_130_BTC_1",
+  "HegicStrategy_CALL_130_BTC_2",
+  "HegicStrategy_CALL_130_BTC_3",
+  "HegicStrategy_CALL_130_BTC_4",
+  "HegicStrategy_STRADDLE_ETH_1",
+  "HegicStrategy_STRADDLE_ETH_2",
+  "HegicStrategy_STRADDLE_ETH_3",
+  "HegicStrategy_STRADDLE_ETH_4",
+  "HegicStrategy_STRADDLE_BTC_1",
+  "HegicStrategy_STRADDLE_BTC_2",
+  "HegicStrategy_STRADDLE_BTC_3",
+  "HegicStrategy_STRADDLE_BTC_4",
+  "HegicStrategy_STRANGLE_10_ETH_1",
+  "HegicStrategy_STRANGLE_10_ETH_2",
+  "HegicStrategy_STRANGLE_10_ETH_3",
+  "HegicStrategy_STRANGLE_10_ETH_4",
+  "HegicStrategy_STRANGLE_10_BTC_1",
+  "HegicStrategy_STRANGLE_10_BTC_2",
+  "HegicStrategy_STRANGLE_10_BTC_3",
+  "HegicStrategy_STRANGLE_10_BTC_4",
+  "HegicStrategy_STRANGLE_20_ETH_1",
+  "HegicStrategy_STRANGLE_20_ETH_2",
+  "HegicStrategy_STRANGLE_20_ETH_3",
+  "HegicStrategy_STRANGLE_20_ETH_4",
+  "HegicStrategy_STRANGLE_20_BTC_1",
+  "HegicStrategy_STRANGLE_20_BTC_2",
+  "HegicStrategy_STRANGLE_20_BTC_3",
+  "HegicStrategy_STRANGLE_20_BTC_4",
+  "HegicStrategy_STRANGLE_30_ETH_1",
+  "HegicStrategy_STRANGLE_30_ETH_2",
+  "HegicStrategy_STRANGLE_30_ETH_3",
+  "HegicStrategy_STRANGLE_30_ETH_4",
+  "HegicStrategy_STRANGLE_30_BTC_1",
+  "HegicStrategy_STRANGLE_30_BTC_2",
+  "HegicStrategy_STRANGLE_30_BTC_3",
+  "HegicStrategy_STRANGLE_30_BTC_4",
+  "HegicStrategy_SPREAD_CALL_10_ETH_1",
+  "HegicStrategy_SPREAD_CALL_10_ETH_2",
+  "HegicStrategy_SPREAD_CALL_10_ETH_3",
+  "HegicStrategy_SPREAD_CALL_10_ETH_4",
+  "HegicStrategy_SPREAD_CALL_10_BTC_1",
+  "HegicStrategy_SPREAD_CALL_10_BTC_2",
+  "HegicStrategy_SPREAD_CALL_10_BTC_3",
+  "HegicStrategy_SPREAD_CALL_10_BTC_4",
+  "HegicStrategy_SPREAD_CALL_20_ETH_1",
+  "HegicStrategy_SPREAD_CALL_20_ETH_2",
+  "HegicStrategy_SPREAD_CALL_20_ETH_3",
+  "HegicStrategy_SPREAD_CALL_20_ETH_4",
+  "HegicStrategy_SPREAD_CALL_20_BTC_1",
+  "HegicStrategy_SPREAD_CALL_20_BTC_2",
+  "HegicStrategy_SPREAD_CALL_20_BTC_3",
+  "HegicStrategy_SPREAD_CALL_20_BTC_4",
+  "HegicStrategy_SPREAD_CALL_30_ETH_1",
+  "HegicStrategy_SPREAD_CALL_30_ETH_2",
+  "HegicStrategy_SPREAD_CALL_30_ETH_3",
+  "HegicStrategy_SPREAD_CALL_30_ETH_4",
+  "HegicStrategy_SPREAD_CALL_30_BTC_1",
+  "HegicStrategy_SPREAD_CALL_30_BTC_2",
+  "HegicStrategy_SPREAD_CALL_30_BTC_3",
+  "HegicStrategy_SPREAD_CALL_30_BTC_4",
+  "HegicStrategy_SPREAD_PUT_10_ETH_1",
+  "HegicStrategy_SPREAD_PUT_10_ETH_2",
+  "HegicStrategy_SPREAD_PUT_10_ETH_3",
+  "HegicStrategy_SPREAD_PUT_10_ETH_4",
+  "HegicStrategy_SPREAD_PUT_10_BTC_1",
+  "HegicStrategy_SPREAD_PUT_10_BTC_2",
+  "HegicStrategy_SPREAD_PUT_10_BTC_3",
+  "HegicStrategy_SPREAD_PUT_10_BTC_4",
+  "HegicStrategy_SPREAD_PUT_20_ETH_1",
+  "HegicStrategy_SPREAD_PUT_20_ETH_2",
+  "HegicStrategy_SPREAD_PUT_20_ETH_3",
+  "HegicStrategy_SPREAD_PUT_20_ETH_4",
+  "HegicStrategy_SPREAD_PUT_20_BTC_1",
+  "HegicStrategy_SPREAD_PUT_20_BTC_2",
+  "HegicStrategy_SPREAD_PUT_20_BTC_3",
+  "HegicStrategy_SPREAD_PUT_20_BTC_4",
+  "HegicStrategy_SPREAD_PUT_30_ETH_1",
+  "HegicStrategy_SPREAD_PUT_30_ETH_2",
+  "HegicStrategy_SPREAD_PUT_30_ETH_3",
+  "HegicStrategy_SPREAD_PUT_30_ETH_4",
+  "HegicStrategy_SPREAD_PUT_30_BTC_1",
+  "HegicStrategy_SPREAD_PUT_30_BTC_2",
+  "HegicStrategy_SPREAD_PUT_30_BTC_3",
+  "HegicStrategy_SPREAD_PUT_30_BTC_4",
+  "HegicStrategy_STRAP_ETH_1",
+  "HegicStrategy_STRAP_ETH_2",
+  "HegicStrategy_STRAP_ETH_3",
+  "HegicStrategy_STRAP_ETH_4",
+  "HegicStrategy_STRAP_BTC_1",
+  "HegicStrategy_STRAP_BTC_2",
+  "HegicStrategy_STRAP_BTC_3",
+  "HegicStrategy_STRAP_BTC_4",
+  "HegicStrategy_STRIP_ETH_1",
+  "HegicStrategy_STRIP_ETH_2",
+  "HegicStrategy_STRIP_ETH_3",
+  "HegicStrategy_STRIP_ETH_4",
+  "HegicStrategy_STRIP_BTC_1",
+  "HegicStrategy_STRIP_BTC_2",
+  "HegicStrategy_STRIP_BTC_3",
+  "HegicStrategy_STRIP_BTC_4",
+
   "HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_ETH",
   "HegicStrategy_INVERSE_BEAR_CALL_SPREAD_10_BTC",
   "HegicStrategy_INVERSE_BEAR_CALL_SPREAD_20_ETH",
@@ -39,14 +252,6 @@ export const availableStrategies = [
   "HegicStrategy_INVERSE_BULL_PUT_SPREAD_20_BTC",
   "HegicStrategy_INVERSE_BULL_PUT_SPREAD_30_ETH",
   "HegicStrategy_INVERSE_BULL_PUT_SPREAD_30_BTC",
-  "HegicStrategy_STRADDLE_ETH",
-  "HegicStrategy_STRADDLE_BTC",
-  "HegicStrategy_STRANGLE_10_ETH",
-  "HegicStrategy_STRANGLE_10_BTC",
-  "HegicStrategy_STRANGLE_20_ETH",
-  "HegicStrategy_STRANGLE_20_BTC",
-  "HegicStrategy_STRANGLE_30_ETH",
-  "HegicStrategy_STRANGLE_30_BTC",
   "HegicStrategy_INVERSE_LONG_BUTTERFLY_10_ETH",
   "HegicStrategy_INVERSE_LONG_BUTTERFLY_10_BTC",
   "HegicStrategy_INVERSE_LONG_BUTTERFLY_20_ETH",
@@ -57,22 +262,6 @@ export const availableStrategies = [
   "HegicStrategy_INVERSE_LONG_CONDOR_20_BTC",
   "HegicStrategy_INVERSE_LONG_CONDOR_30_ETH",
   "HegicStrategy_INVERSE_LONG_CONDOR_30_BTC",
-  "HegicStrategy_SPREAD_CALL_10_ETH",
-  "HegicStrategy_SPREAD_CALL_10_BTC",
-  "HegicStrategy_SPREAD_CALL_20_ETH",
-  "HegicStrategy_SPREAD_CALL_20_BTC",
-  "HegicStrategy_SPREAD_CALL_30_ETH",
-  "HegicStrategy_SPREAD_CALL_30_BTC",
-  "HegicStrategy_SPREAD_PUT_10_ETH",
-  "HegicStrategy_SPREAD_PUT_10_BTC",
-  "HegicStrategy_SPREAD_PUT_20_ETH",
-  "HegicStrategy_SPREAD_PUT_20_BTC",
-  "HegicStrategy_SPREAD_PUT_30_ETH",
-  "HegicStrategy_SPREAD_PUT_30_BTC",
-  "HegicStrategy_STRAP_ETH",
-  "HegicStrategy_STRAP_BTC",
-  "HegicStrategy_STRIP_ETH",
-  "HegicStrategy_STRIP_BTC",
 ] as const
 
 export const availablePricers = [
@@ -139,67 +328,3 @@ export const availablePricers = [
   "PriceCalculator_STRIP_ETH",
   "PriceCalculator_STRIP_BTC",
 ] as const
-
-type StrategyName = typeof availableStrategies[number]
-type PolynomialPricers = typeof availablePricers[number]
-
-export const fixture = deployments.createFixture<Fixture, string | string[]>(
-  async ({deployments}, tags = "test") => {
-    await deployments.fixture(tags)
-    return await getContracts()
-  },
-)
-
-export async function getContracts() {
-  const signers = await ethers.getSigners()
-
-  const rawStrategies = await Promise.all(
-    availableStrategies.map(async (strategyName) => [
-      strategyName,
-      (await ethers.getContract(strategyName)) as HegicStrategy,
-    ]),
-  )
-
-  const rawPricers = await Promise.all(
-    availablePricers.map(async (PolynomialPricers) => [
-      PolynomialPricers,
-      (await ethers.getContract(
-        PolynomialPricers,
-      )) as PolynomialPriceCalculator,
-    ]),
-  )
-
-  return {
-    signers,
-    USDC: (await ethers.getContract("USDC")) as Erc20Mock,
-    HEGIC: (await ethers.getContract("HEGIC")) as Erc20Mock,
-    CoverPool: (await ethers.getContract("CoverPool")) as CoverPool,
-    payoffPool: signers[9],
-    ProfitDistributor: (await ethers.getContract(
-      "ProfitDistributor",
-    )) as ProfitDistributor,
-    OperationalTreasury: (await ethers.getContract(
-      "OperationalTreasury",
-    )) as OperationalTreasury,
-    PositionsManager: (await ethers.getContract(
-      "PositionsManager",
-    )) as PositionsManager,
-    BasePriceCalculator_PUT_ETH: (await ethers.getContract(
-      "PriceCalculator_PUT_100_ETH",
-    )) as PolynomialPriceCalculator,
-    PriceProviderETH: (await ethers.getContract(
-      "PriceProviderETH",
-    )) as PriceProviderMock,
-    PriceProviderBTC: (await ethers.getContract(
-      "PriceProviderBTC",
-    )) as PriceProviderMock,
-    strategies: Object.fromEntries(rawStrategies) as {
-      [key in StrategyName]: HegicStrategy
-    },
-    pricers: Object.fromEntries(rawPricers) as {
-      [key in PolynomialPricers]: PolynomialPriceCalculator
-    },
-  }
-}
-
-export type Fixture = Awaited<ReturnType<typeof getContracts>>

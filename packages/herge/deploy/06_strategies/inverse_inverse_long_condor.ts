@@ -1,24 +1,20 @@
 import {HardhatRuntimeEnvironment} from "hardhat/types"
-import {parseUnits} from "ethers/lib/utils"
-import limits_arbitrum from "./.limits.json"
+import config from "./.config"
+
 
 async function deployment(hre: HardhatRuntimeEnvironment) {
   const {deployments, getNamedAccounts} = hre
-  const {deploy, get} = deployments
+  const {deploy, get, execute } = deployments
   const {deployer} = await getNamedAccounts()
   const ProfitCalculatorLib = await get("ProfitCalculator")
+  const LimitController = await get("LimitController")
 
-  const _params = {
-    currency: "",
-    default_limit: parseUnits("10000", 6),
-    limits: {
-      arbitrum: limits_arbitrum,
-    }[hre.network.name] as typeof limits_arbitrum,
-    priceCoefficients: [6e4, -6e4],
-    percent: 0,
+  type DeployParams = {
+    currency: string
+    percent: number
   }
 
-  async function deployOptionStrategy(params: typeof _params) {
+  async function deployOptionStrategy(params: DeployParams) {
     const priceProvider = await get("PriceProvider" + params.currency)
     const contract = "HegicStrategyInverseLongCondor"
     const pricerName = `PriceCalculator_INVERSE_LONG_CONDOR_${params.percent}_${params.currency}`
@@ -37,10 +33,10 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
       contract: "CombinePriceCalculator",
       from: deployer,
       log: true,
-      args: [pricers, _params.priceCoefficients],
+      args: [pricers, [6e4, -6e4]],
     })
 
-    await deploy(strategyName, {
+    const strategyInstance = await deploy(strategyName, {
         contract,
         from: deployer,
         log: true,
@@ -50,16 +46,20 @@ async function deployment(hre: HardhatRuntimeEnvironment) {
         args: [
             priceProvider.address,
             pricer.address,
-            params.limits?.[strategyName as keyof typeof limits_arbitrum] ?? params.default_limit,
+            config[strategyName].limit,
             spotDecimals,
-            params.percent
-        ]
+            params.percent,
+            config[strategyName].periodLimits,
+        LimitController.address,
+      ]
     })
+
+
   }
 
   for (const percent of [20, 30])
     for (const currency of ["ETH", "BTC"])
-      await deployOptionStrategy({..._params, currency, percent})
+      await deployOptionStrategy({currency, percent})
 }
 
 deployment.tags = [
@@ -68,5 +68,6 @@ deployment.tags = [
   "strategy-inverse-long-condor",
   "arbitrum",
 ]
+
 deployment.dependencies = ["profit-calculator", "strategy-strangle"]
 export default deployment

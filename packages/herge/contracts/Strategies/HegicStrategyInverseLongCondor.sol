@@ -30,8 +30,19 @@ contract HegicStrategyInverseLongCondor is HegicInverseStrategy {
         IPremiumCalculator _pricer,
         uint256 _limit,
         uint8 _spotDecimals,
-        uint256 percentage
-    ) HegicInverseStrategy(_priceProvider, _pricer, _limit, _spotDecimals) {
+        uint256 percentage,
+        uint48[2] memory periodLimits,
+        LimitController _limitController
+    )
+        HegicInverseStrategy(
+            _priceProvider,
+            _pricer,
+            _limit,
+            _spotDecimals,
+            periodLimits,
+            _limitController
+        )
+    {
         strikePercentage = percentage;
     }
 

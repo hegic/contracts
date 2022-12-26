@@ -1,6 +1,6 @@
-import { HardhatUserConfig } from "hardhat/types"
-import { task } from "hardhat/config"
-import { HARDHAT_NETWORK_NAME } from "hardhat/plugins"
+import {HardhatUserConfig} from "hardhat/types"
+import {task} from "hardhat/config"
+import {HARDHAT_NETWORK_NAME} from "hardhat/plugins"
 import "@nomiclabs/hardhat-waffle"
 import "@nomiclabs/hardhat-etherscan"
 import "hardhat-typechain"
@@ -16,11 +16,11 @@ import "@atixlabs/hardhat-time-n-mine"
 import "@atixlabs/hardhat-time-n-mine/dist/src/type-extensions"
 import "hardhat-dependency-compiler"
 import dotenv from "dotenv"
-import { writeFile } from "fs/promises"
+import {writeFile} from "fs/promises"
 
 dotenv.config()
 
-const { ETHERSCAN_API_KEY, COIN_MARKET_CAP } = process.env
+const {ETHERSCAN_API_KEY, COIN_MARKET_CAP} = process.env
 
 export default {
   dependencyCompiler: {
@@ -29,22 +29,20 @@ export default {
       "@hegic/utils/contracts/Mocks/PriceProviderMock.sol",
       "@hegic/v8888/contracts/PriceCalculators/PolynomialPriceCalculator.sol",
       "@hegic/v8888/contracts/PriceCalculators/CombinedPriceCalculator.sol",
-    ]
+    ],
   },
   localNetworksConfig: "~/.hardhat/networks.json",
   defaultNetwork: "hardhat",
   solidity: {
-    compilers: ["0.8.15"].map(
-      (version) => ({
-        version,
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
+    compilers: ["0.8.15"].map((version) => ({
+      version,
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
         },
-      }),
-    ),
+      },
+    })),
   },
   networks: {
     coverage: {
@@ -52,8 +50,9 @@ export default {
       gasPrice: 100e9,
     },
     localhost: {
-      accounts:{
-        mnemonic: "myth like bonus scare over problem client lizard pioneer submit female collect"
+      accounts: {
+        mnemonic:
+          "myth like bonus scare over problem client lizard pioneer submit female collect",
       },
       gasPrice: 100e9,
     },
@@ -68,7 +67,7 @@ export default {
     payoffPool: {
       default: 9,
       arbitrum: 1,
-    }
+    },
   },
   mocha: {
     forbidOnly: !Boolean(process.env.DEV),
@@ -85,28 +84,44 @@ export default {
   },
   abiExporter: {
     clear: true,
-    runOnCompile: true
-  }
+    runOnCompile: true,
+  },
 } as HardhatUserConfig
 
 task("addresses", "Print the list of deployed contracts", async (_, hre) => {
   const contracts = await hre.deployments.all()
-  const table: { [key: string]: { address: string } } = {}
+  const table: {[key: string]: {address: string}} = {}
   for (let contract of Object.keys(contracts)) {
-    table[contract] = { address: contracts[contract].address }
+    table[contract] = {address: contracts[contract].address}
   }
   console.table(table)
 })
 
 task("deploy").setAction(async (params, hre, runSupper) => {
   await runSupper(params)
-  const addresses = await hre.deployments.all()
+  const addresses = await hre.deployments
+    .all()
     .then(Object.entries)
-    .then(x => x.map(([name, value]) => [name, value.address as string]))
+    .then((x) => x.map(([name, value]) => [name, value.address as string]))
     .then(Object.fromEntries)
   if (params.write && hre.network.name != HARDHAT_NETWORK_NAME)
     await writeFile(
       `./deployments/${hre.network.name}/.addresses.json`,
-      JSON.stringify(addresses)
+      JSON.stringify(addresses),
+    )
+})
+
+task("write_addresses").setAction(async (params, hre) => {
+  const addresses = await hre.deployments
+    .all()
+    .then(Object.entries)
+    .then((x) => x.map(([name, value]) => [name, value.address as string]))
+    .then(Object.fromEntries)
+    console.log("eee")
+  if (hre.network.name != HARDHAT_NETWORK_NAME)
+    await writeFile(
+      `./deployments/${hre.network.name}/.addresses.json`,
+      JSON.stringify(addresses),
+
     )
 })

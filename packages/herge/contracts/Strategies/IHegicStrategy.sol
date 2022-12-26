@@ -82,4 +82,9 @@ interface IHegicStrategy {
         );
 
     function connect() external;
+
+    function positionExpiration(uint256)
+        external
+        view
+        returns (uint32 timestamp);
 }
